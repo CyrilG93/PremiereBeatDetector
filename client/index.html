@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Beat Detector</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/wavesurfer.js@7"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/minimap.min.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Beat Detector</h1>
+        </div>
+
+        <div class="controls-section">
+            <button id="btn-load-active" class="topcoat-button--large--cta">Load Active Sequence Audio</button>
+            <div class="file-input-wrapper">
+                <button id="btn-select-file" class="topcoat-button">Select Audio File</button>
+                <span id="file-name">No file selected</span>
+            </div>
+        </div>
+
+        <div id="waveform-container">
+            <div id="waveform"></div>
+            <div id="wave-minimap"></div>
+            <div class="waveform-controls">
+                <button id="btn-play-click">▶ Play Preview</button>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="control-group">
+                <label>Detection Mode</label>
+                <div class="button-group">
+                    <button id="btn-mode-manual" class="active">Manual Grid</button>
+                    <button id="btn-mode-auto">Algorithmic</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section" id="manual-controls">
+            <div class="control-group">
+                <label>BPM (Tempo)</label>
+                <input type="range" id="bpm" min="60" max="200" value="120" step="1">
+                <span id="bpm-val">120 BPM</span>
+            </div>
+            <div class="control-group">
+                <label>First Beat Offset (s)</label>
+                <input type="range" id="first-beat" min="0" max="5" value="0" step="0.001">
+                <span id="first-beat-val">0.000s</span>
+            </div>
+        </div>
+
+        <div class="settings-section" id="auto-controls" style="display: none;">
+            <div class="control-group">
+                <label>Threshold</label>
+                <input type="range" id="threshold" min="0" max="100" value="35">
+                <span id="threshold-val">35%</span>
+            </div>
+            <div class="control-group">
+                <label>Min Beat Distance (ms)</label>
+                <input type="range" id="min-distance" min="100" max="1000" value="450" step="50">
+                <span id="min-distance-val">450ms</span>
+            </div>
+        </div>
+
+        <div class="settings-section compact">
+            <div class="control-group">
+                <label>Subdivision</label>
+                <div class="button-group">
+                    <button id="btn-sub-1" class="active">/1</button>
+                    <button id="btn-sub-2">/2</button>
+                    <button id="btn-sub-4">/4</button>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Marker Placement</label>
+                <select id="marker-type">
+                    <option value="clip">Clip Markers (Source)</option>
+                    <option value="sequence">Sequence Markers (Offset)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="action-section">
+            <button id="btn-create-markers" class="topcoat-button--large--cta" disabled>Create Markers</button>
+        </div>
+
+        <div id="status-msg">Ready</div>
+    </div>
+
+    <!-- CSInterface - usually included in extensions, we'll assume it's available or mock it if needed for local dev -->
+    <script src="lib/CSInterface.js"></script>
+    <script src="main.js"></script>
+</body>
+
+</html>

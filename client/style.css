@@ -1,0 +1,199 @@
+body {
+    background-color: #1e1e1e;
+    color: #b5b5b5;
+    font-family: "Adobe Clean", "Segoe UI", "San Francisco", sans-serif;
+    margin: 0;
+    padding: 5px;
+    font-size: 13px;
+    overflow-x: hidden;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+h1 {
+    font-size: 18px;
+    margin: 0 0 10px 0;
+    color: #efefef;
+}
+
+.header {
+    text-align: center;
+    padding: 5px 0;
+    border-bottom: 1px solid #444;
+    margin-bottom: 8px;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.controls-section,
+.settings-section,
+.action-section {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    background: #333;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.controls-section {
+    margin-bottom: 5px;
+}
+
+.file-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px;
+}
+
+.button-section {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+#waveform-container {
+    width: 100%;
+    margin: 5px 0;
+    background: #1a1a1a;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+#waveform {
+    width: 100%;
+}
+
+#wave-minimap {
+    width: 100%;
+    margin-top: 8px;
+    border: 1px solid #444;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+/* Waveform controls under minimap */
+.waveform-controls {
+    margin-top: 6px;
+    text-align: center;
+}
+
+.waveform-controls button {
+    padding: 5px 14px;
+    font-size: 12px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.waveform-controls button:hover {
+    background: #357abd;
+}
+
+/* Minimap overlay (the draggable viewport) */
+#wave-minimap .wavesurfer-region {
+    cursor: move !important;
+}
+
+.settings-section {
+    margin-bottom: 6px;
+    padding: 5px 6px;
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+/* Compact sections for less important controls */
+.settings-section.compact {
+    margin-bottom: 5px;
+    padding: 4px 6px;
+}
+
+.control-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+input[type="range"] {
+    flex-grow: 1;
+    margin: 0 10px;
+}
+
+input[type="number"] {
+    width: 60px;
+    background: #232323;
+    border: 1px solid #444;
+    color: #efefef;
+    padding: 4px;
+}
+
+/* Button Styles mimicking Adobe Topcoat */
+button {
+    background-color: #444;
+    border: 1px solid #222;
+    color: #efefef;
+    padding: 6px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background-color: #555;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.button-group {
+    display: flex;
+    gap: 5px;
+}
+
+.button-group button {
+    padding: 4px 8px;
+}
+
+.button-group button.active {
+    background-color: #2f6ec8;
+    border-color: #20549c;
+}
+
+.topcoat-button--large--cta {
+    background-color: #2f6ec8;
+    border-color: #20549c;
+    font-weight: bold;
+}
+
+.topcoat-button--large--cta:hover {
+    background-color: #367bdc;
+}
+
+#status-msg {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    margin-top: 10px;
+}
