@@ -1,6 +1,6 @@
 // ExtendScript for Beat Detector
 
-function addMarkers(beatsJson, offsetSeconds, markerType) {
+function BeatDetector_addMarkers(beatsJson, offsetSeconds, markerType) {
     try {
         var beats = JSON.parse(beatsJson);
         var activeSequence = app.project.activeSequence;
@@ -117,7 +117,7 @@ function addMarkers(beatsJson, offsetSeconds, markerType) {
     }
 }
 
-function getSelectedClipPath() {
+function BeatDetector_getSelectedClipPath() {
     var activeSequence = app.project.activeSequence;
     if (!activeSequence) {
         return JSON.stringify({ error: "No active sequence found." });

@@ -117,7 +117,7 @@ function setupEventListeners() {
 
     document.getElementById('btn-load-active').addEventListener('click', function () {
         document.getElementById('status-msg').textContent = "Getting selected clip...";
-        csInterface.evalScript("getSelectedClipPath()", function (result) {
+        csInterface.evalScript("BeatDetector_getSelectedClipPath()", function (result) {
             console.log("getSelectedClipPath result:", result);
             try {
                 var data = JSON.parse(result);
@@ -858,7 +858,7 @@ function createMarkersInPremiere() {
     // Properly escape the JSON string for ExtendScript
     // We need to escape quotes and pass it as a string literal
     var escapedJson = beatsJson.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    var script = 'addMarkers("' + escapedJson + '", ' + offset + ', "' + markerType + '")';
+    var script = 'BeatDetector_addMarkers("' + escapedJson + '", ' + offset + ', "' + markerType + '")';
 
     console.log("ExtendScript call:", script.substring(0, 200));
 
