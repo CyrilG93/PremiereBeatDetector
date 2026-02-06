@@ -10,7 +10,168 @@ var clipStartOffset = 0; // Start time of the clip on the timeline
 document.addEventListener('DOMContentLoaded', function () {
     initWaveSurfer();
     setupEventListeners();
+    checkForUpdates();
 });
+
+// ============================================================================
+// UPDATE SYSTEM
+// ============================================================================
+
+const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
+let CURRENT_VERSION = '1.1.3';
+
+/**
+ * Compare two version strings (e.g. "1.0.0" vs "1.0.1")
+ */
+function compareVersions(v1, v2) {
+    const p1 = v1.replace(/^v/, '').split('.').map(Number);
+    const p2 = v2.replace(/^v/, '').split('.').map(Number);
+    const len = Math.max(p1.length, p2.length);
+
+    for (let i = 0; i < len; i++) {
+        const num1 = p1[i] || 0;
+        const num2 = p2[i] || 0;
+        if (num1 > num2) return 1;
+        if (num1 < num2) return -1;
+    }
+    return 0;
+}
+
+/**
+ * Get current version from manifest
+ */
+function getAppVersion() {
+    try {
+        if (window.cep && window.cep.fs) {
+            const path = window.cep.fs.readFile(csInterface.getSystemPath(SystemPath.EXTENSION) + "/CSXS/manifest.xml");
+            if (path.data) {
+                const match = path.data.match(/ExtensionBundleVersion="([^"]+)"/);
+                if (match && match[1]) {
+                    return match[1];
+                }
+            }
+        }
+    } catch (e) {
+        console.error('[Update] Error reading manifest:', e);
+    }
+    return CURRENT_VERSION;
+}
+
+/**
+ * Check for updates on GitHub
+ */
+async function checkForUpdates() {
+    console.log('[Update] Checking for updates...');
+    const localVersion = getAppVersion();
+    console.log('[Update] Local version:', localVersion);
+
+    // Update settings badge
+    const versionBadge = document.getElementById('versionInfo');
+    if (versionBadge) {
+        versionBadge.textContent = 'v' + localVersion;
+    }
+
+    try {
+        // Use standard fetch or Node https if available
+        // Premiere extensions run in CEF, so fetch is available but CORS might be an issue.
+        // Node is enabled in manifest, so we can use it.
+        if (window.require) {
+            const https = require('https');
+            const options = {
+                hostname: 'api.github.com',
+                path: `/repos/${GITHUB_REPO}/releases/latest`,
+                method: 'GET',
+                headers: {
+                    'User-Agent': 'PremiereCommon-UpdateCheck'
+                }
+            };
+
+            const req = https.request(options, (res) => {
+                let data = '';
+                res.on('data', (chunk) => data += chunk);
+                res.on('end', () => {
+                    handleUpdateResponse(data, localVersion);
+                });
+            });
+
+            req.on('error', (e) => {
+                console.error('[Update] Network error:', e);
+            });
+
+            req.end();
+        } else {
+            // Fallback to fetch (might fail due to CORS)
+            const response = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/releases/latest`);
+            if (response.ok) {
+                const data = await response.text();
+                handleUpdateResponse(data, localVersion);
+            }
+        }
+
+    } catch (e) {
+        console.error('[Update] Unexpected error:', e);
+    }
+}
+
+function handleUpdateResponse(data, localVersion) {
+    try {
+        const release = JSON.parse(data);
+        const latestVersion = release.tag_name.replace(/^v/, '');
+
+        console.log('[Update] Latest version:', latestVersion);
+
+        if (compareVersions(latestVersion, localVersion) > 0) {
+            console.log('[Update] New version available!');
+
+            // Find zip asset
+            const zipAsset = release.assets.find(asset => asset.name.endsWith('.zip'));
+            const downloadUrl = zipAsset ? zipAsset.browser_download_url : release.html_url;
+
+            showUpdateBanner(downloadUrl);
+        } else {
+            console.log('[Update] App is up to date.');
+        }
+    } catch (e) {
+        console.error('[Update] Error parsing response:', e);
+    }
+}
+
+/**
+ * Show update banner
+ */
+function showUpdateBanner(downloadUrl) {
+    const banner = document.getElementById('updateBanner');
+    if (banner) {
+        banner.style.display = 'block';
+
+        // i18n logic based on Host Locale
+        let locale = 'en_US';
+        try {
+            locale = csInterface.getHostEnvironment().appLocale;
+        } catch (e) { }
+
+        const isFrench = locale && locale.toLowerCase().startsWith('fr');
+        banner.textContent = isFrench
+            ? '🚀 Nouvelle version disponible ! Cliquez pour mettre à jour.'
+            : '🚀 New version available! Click to update.';
+
+        banner.onclick = function () {
+            if (downloadUrl) {
+                try {
+                    csInterface.openURLInDefaultBrowser(downloadUrl);
+                } catch (e) {
+                    console.error('[Update] Error opening URL:', e);
+                    // Fallback
+                    try {
+                        window.location.href = downloadUrl;
+                    } catch (e2) {
+                        console.error('[Update] Fallback failed:', e2);
+                    }
+                }
+            }
+        };
+    }
+}
 
 function initWaveSurfer() {
     wavesurfer = WaveSurfer.create({

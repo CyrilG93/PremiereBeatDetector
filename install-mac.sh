@@ -1,6 +1,6 @@
 #!/bin/bash
 # Beat Detector - macOS Installation Script
-# Version 1.0.0
+# Version 1.1.3
 
 echo ""
 echo "========================================"
@@ -16,12 +16,12 @@ echo "Source: $SOURCE_DIR"
 echo "Target: $EXTENSION_PATH"
 echo ""
 
-# Check for sudo
-if [ ! -w "/Library/Application Support/Adobe/CEP" ]; then
+# Check for sudo and auto-elevate if needed
+if [ "$EUID" -ne 0 ]; then
     echo "This script requires administrator privileges."
-    echo "Please run with: sudo ./install-mac.sh"
-    echo ""
-    exit 1
+    echo "Requesting sudo permissions..."
+    sudo "$0" "$@"
+    exit $?
 fi
 
 echo "[OK] Running with appropriate permissions"
