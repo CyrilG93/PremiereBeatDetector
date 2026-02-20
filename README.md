@@ -78,6 +78,7 @@ Or for user-only installation:
 2. Run `install-windows.bat`
 The installer enables debug mode automatically.
 It stays open and waits for a key press before closing.
+Important: extract the ZIP first, do not run the installer directly from a compressed folder.
 
 #### Step 2: Restart Premiere Pro
 Go to **Window** > **Extensions** > **Beat Detector**
@@ -259,6 +260,7 @@ Ou pour une installation utilisateur uniquement :
 2. Lancez `install-windows.bat`
 L'installateur active automatiquement le mode debug.
 Il reste ouvert et attend une touche avant de se fermer.
+Important : extrayez d'abord le ZIP, ne lancez pas l'installateur depuis un dossier compressé.
 
 #### Étape 2 : Redémarrer Premiere Pro
 Allez dans **Fenêtre** > **Extensions** > **Beat Detector**

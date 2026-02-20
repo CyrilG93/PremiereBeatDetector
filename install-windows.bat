@@ -30,9 +30,21 @@ echo.
 echo Step 2/2: Installing extension files...
 
 :: Check source files exist
-if not exist "%SOURCE_DIR%client" (
+if not exist "%SOURCE_DIR%client\main.js" (
     echo ERROR: Extension files not found!
-    echo This script must be run from the extension folder.
+    echo Make sure the ZIP is fully extracted and run this script from that extracted folder.
+    call :wait_for_close
+    exit /b 1
+)
+if not exist "%SOURCE_DIR%host\index.jsx" (
+    echo ERROR: Extension files not found!
+    echo Make sure the ZIP is fully extracted and run this script from that extracted folder.
+    call :wait_for_close
+    exit /b 1
+)
+if not exist "%SOURCE_DIR%CSXS\manifest.xml" (
+    echo ERROR: Extension files not found!
+    echo Make sure the ZIP is fully extracted and run this script from that extracted folder.
     call :wait_for_close
     exit /b 1
 )
@@ -43,34 +55,38 @@ if not defined EXTENSION_PATH call :try_system_path "%SYSTEM_EXT_PATH_X64%"
 
 if not defined EXTENSION_PATH (
     set "EXTENSION_PATH=%USER_EXT_PATH%"
-    if not exist "%EXTENSION_PATH%" mkdir "%EXTENSION_PATH%" >nul 2>&1
-    if not exist "%EXTENSION_PATH%" (
-        echo ERROR: Could not create extension folder:
-        echo !EXTENSION_PATH!
-        echo.
-        call :wait_for_close
-        exit /b 1
-    )
     echo [INFO] Installing for current user (no system write access).
 ) else (
     echo [OK] Installing to system extensions folder.
 )
 
+if not exist "%EXTENSION_PATH%" mkdir "%EXTENSION_PATH%" >nul 2>&1
+if not exist "%EXTENSION_PATH%" (
+    echo ERROR: Could not create extension folder:
+    echo !EXTENSION_PATH!
+    echo.
+    call :wait_for_close
+    exit /b 1
+)
+
 :: Copy files
 set "COPY_FAILED=0"
 xcopy /Y /E /I /Q "%SOURCE_DIR%client" "%EXTENSION_PATH%\client\" >nul
-if errorlevel 2 set "COPY_FAILED=1"
+if errorlevel 1 set "COPY_FAILED=1"
 xcopy /Y /E /I /Q "%SOURCE_DIR%host" "%EXTENSION_PATH%\host\" >nul
-if errorlevel 2 set "COPY_FAILED=1"
+if errorlevel 1 set "COPY_FAILED=1"
 xcopy /Y /E /I /Q "%SOURCE_DIR%CSXS" "%EXTENSION_PATH%\CSXS\" >nul
-if errorlevel 2 set "COPY_FAILED=1"
+if errorlevel 1 set "COPY_FAILED=1"
 
 if exist "%SOURCE_DIR%.debug" copy /Y "%SOURCE_DIR%.debug" "%EXTENSION_PATH%\.debug" >nul
+if errorlevel 1 set "COPY_FAILED=1"
 if exist "%SOURCE_DIR%README.md" copy /Y "%SOURCE_DIR%README.md" "%EXTENSION_PATH%\README.md" >nul
+if errorlevel 1 set "COPY_FAILED=1"
 
 if "%COPY_FAILED%"=="1" (
     echo ERROR: Failed to copy one or more extension folders.
     echo Target path: !EXTENSION_PATH!
+    echo Make sure this script is run from an extracted folder (not directly from a ZIP).
     echo.
     call :wait_for_close
     exit /b 1
@@ -99,10 +115,7 @@ if "%CANDIDATE%"=="" goto :eof
 for %%P in ("%CANDIDATE%") do set "CANDIDATE_PARENT=%%~dpP"
 if not exist "%CANDIDATE_PARENT%" goto :eof
 
-if not exist "%CANDIDATE%" mkdir "%CANDIDATE%" >nul 2>&1
-if not exist "%CANDIDATE%" goto :eof
-
-set "WRITE_TEST_FILE=%CANDIDATE%\.__beatdetector_write_test"
+set "WRITE_TEST_FILE=%CANDIDATE_PARENT%.__beatdetector_write_test"
 type nul > "%WRITE_TEST_FILE%" 2>nul
 if exist "%WRITE_TEST_FILE%" (
     del /Q "%WRITE_TEST_FILE%" >nul 2>&1
