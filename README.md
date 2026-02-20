@@ -8,6 +8,22 @@ A powerful Adobe Premiere Pro extension for automatic beat detection and marker 
 
 # English
 
+---
+
+## ✨ Features
+
+- **Automatic BPM Detection** - Advanced algorithm with multi-octave analysis and harmonic weighting
+- **Two Detection Modes**:
+  - **Manual Grid Mode** - Perfect beat grid based on BPM and first beat offset (recommended)
+  - **Algorithmic Mode** - Phase-locked loop for complex rhythms (for experimentation)
+- **Real-time Preview** - Visual beat markers on waveform with live updates
+- **Precise Control** - Manual BPM adjustment and first beat offset with 1ms precision
+- **Audio Playback** - Preview your audio with pause/resume functionality
+- **Subdivision Support** - Create markers at full beats, half notes (/2), or quarter notes (/4)
+- **Flexible Marker Placement** - Choose between clip markers or sequence markers
+
+---
+
 ## 📋 Requirements
 
 This extension is **self-contained** and requires no external dependencies!
@@ -80,22 +96,7 @@ Or for user-only installation (no admin):
 ```
 C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
----
 
-## ✨ Features
-
-- **Automatic BPM Detection** - Advanced algorithm with multi-octave analysis and harmonic weighting
-- **Two Detection Modes**:
-  - **Manual Grid Mode** - Perfect beat grid based on BPM and first beat offset (recommended)
-  - **Algorithmic Mode** - Phase-locked loop for complex rhythms
-- **Real-time Preview** - Visual beat markers on waveform with live updates
-- **Precise Control** - Manual BPM adjustment and first beat offset with 1ms precision
-- **Frame-Accurate Markers** - Markers snap to exact frames in Premiere Pro timeline
-- **Audio Playback** - Preview your audio with pause/resume functionality
-- **Subdivision Support** - Create markers at full beats, half notes (/2), or quarter notes (/4)
-- **Flexible Marker Placement** - Choose between clip markers or sequence markers
-
----
 
 ## 📖 Usage
 
