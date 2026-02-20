@@ -7,6 +7,26 @@ var filteredBeats = []; // Stores beats after subdivision
 var subdivision = 1; // 1, 2, or 4
 var clipStartOffset = 0; // Start time of the clip on the timeline
 
+function toWaveSurferUrl(pathOrUrl) {
+    // Keep already valid URLs untouched (http, https, file, blob, etc.).
+    if (!pathOrUrl || /^[a-z]+:\/\//i.test(pathOrUrl) || pathOrUrl.indexOf('blob:') === 0) {
+        return pathOrUrl;
+    }
+
+    // Convert Windows backslashes to slashes and build a file:// URL for local files.
+    var normalizedPath = pathOrUrl.replace(/\\/g, '/');
+    if (/^[a-zA-Z]:\//.test(normalizedPath)) {
+        return 'file:///' + encodeURI(normalizedPath);
+    }
+
+    // Convert absolute Unix-like paths to file:// URLs.
+    if (normalizedPath.charAt(0) === '/') {
+        return 'file://' + encodeURI(normalizedPath);
+    }
+
+    return pathOrUrl;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     initWaveSurfer();
     setupEventListeners();
@@ -287,7 +307,9 @@ function setupEventListeners() {
                     alert("Error loading clip: " + data.error);
                 } else if (data.path) {
                     clipStartOffset = data.startSeconds || 0;
-                    loadAudio(data.path, data.path.split('/').pop());
+                    // Support both Windows and macOS path separators.
+                    var clipName = data.name || data.path.split(/[\\/]/).pop();
+                    loadAudio(data.path, clipName);
                     document.getElementById('status-msg').textContent = "Loaded clip (Start: " + clipStartOffset.toFixed(2) + "s)";
                 }
             } catch (e) {
@@ -361,7 +383,7 @@ function loadAudio(url, name) {
     wsRegions.clearRegions();
     document.getElementById('btn-create-markers').disabled = true;
 
-    wavesurfer.load(url);
+    wavesurfer.load(toWaveSurferUrl(url));
 }
 
 function analyzeBeats() {

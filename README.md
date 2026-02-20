@@ -59,15 +59,18 @@ Go to **Window** > **Extensions** > **Beat Detector**
 4. Name: `PlayerDebugMode`
 5. Double-click and set Value: `1`
 6. Repeat for `CSXS.12` if using Premiere Pro 2024+
+7. For newer Premiere versions, also set `PlayerDebugMode` in `CSXS.13`
 
 #### Step 2: Install Extension
-Copy the `PremiereBeatDetector` folder to:
+Recommended: run `install-windows.bat` from the extension folder.
+
+Manual install: copy the extension to:
 ```
-C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\
+C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
-Or for user-only installation:
+Or for user-only installation (no admin):
 ```
-C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\
+C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
 
 > **Tip**: Create the `extensions` folder if it doesn't exist.
@@ -167,7 +170,7 @@ Go to **Window** > **Extensions** > **Beat Detector**
 - **Algorithm**: Multi-octave autocorrelation with harmonic weighting and comb filtering
 - **Precision**: ±0.1 BPM tempo detection, 1ms offset precision
 - **Frame Snapping**: Markers are automatically aligned to timeline frames
-- **Audio Engine**: WaveSurfer.js for waveform visualization and playback
+- **Audio Engine**: WaveSurfer.js for waveform visualization and playback (bundled locally, no internet required)
 - **Supported Formats**: MP3, WAV, AIFF, and other browser-supported audio formats
 
 ---
@@ -176,7 +179,7 @@ Go to **Window** > **Extensions** > **Beat Detector**
 
 This extension is provided as-is for use with Adobe Premiere Pro.
 
-**Version**: 1.0.0  
+**Version**: 1.1.3  
 **Author**: Cyril V
 
 ---
@@ -233,15 +236,18 @@ Allez dans **Fenêtre** > **Extensions** > **Beat Detector**
 4. Nom : `PlayerDebugMode`
 5. Double-cliquez et définissez la valeur : `1`
 6. Répétez pour `CSXS.12` si vous utilisez Premiere Pro 2024+
+7. Pour les versions plus récentes de Premiere, ajoutez aussi `PlayerDebugMode` dans `CSXS.13`
 
 #### Étape 2 : Installer l'extension
-Copiez le dossier `PremiereBeatDetector` vers :
+Recommandé : exécutez `install-windows.bat` depuis le dossier de l'extension.
+
+Installation manuelle : copiez l'extension vers :
 ```
-C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\
+C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
-Ou pour une installation utilisateur uniquement :
+Ou pour une installation utilisateur uniquement (sans admin) :
 ```
-C:\Users\[VotreNomUtilisateur]\AppData\Roaming\Adobe\CEP\extensions\
+C:\Users\[VotreNomUtilisateur]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
 
 > **Conseil** : Créez le dossier `extensions` s'il n'existe pas.
@@ -317,7 +323,7 @@ Allez dans **Fenêtre** > **Extensions** > **Beat Detector**
 - **Algorithme** : Autocorrélation multi-octave avec pondération harmonique
 - **Précision** : ±0.1 BPM, précision de 1ms pour le décalage
 - **Alignement** : Marqueurs automatiquement alignés sur les frames
-- **Moteur audio** : WaveSurfer.js pour la visualisation et la lecture
+- **Moteur audio** : WaveSurfer.js pour la visualisation et la lecture (embarqué en local, pas d'Internet requis)
 - **Formats supportés** : MP3, WAV, AIFF et autres formats audio
 
 ---
@@ -326,5 +332,5 @@ Allez dans **Fenêtre** > **Extensions** > **Beat Detector**
 
 Extension fournie telle quelle pour Adobe Premiere Pro.
 
-**Version** : 1.0.0  
+**Version** : 1.1.3  
 **Auteur** : Cyril V
