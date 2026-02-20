@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="11.0" ExtensionBundleId="com.antigravity.beatdetector" ExtensionBundleVersion="1.1.4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ExtensionManifest Version="11.0" ExtensionBundleId="com.antigravity.beatdetector" ExtensionBundleVersion="1.1.5" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ExtensionList>
-        <Extension Id="com.antigravity.beatdetector" Version="1.1.4" />
+        <Extension Id="com.antigravity.beatdetector" Version="1.1.5" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>

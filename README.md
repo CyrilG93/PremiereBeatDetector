@@ -188,7 +188,7 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 
 This extension is provided as-is for use with Adobe Premiere Pro.
 
-**Version**: 1.1.4  
+**Version**: 1.1.5  
 
 ---
 
@@ -352,4 +352,4 @@ C:\Users\[VotreNomUtilisateur]\AppData\Roaming\Adobe\CEP\extensions\com.antigrav
 
 Extension fournie telle quelle pour Adobe Premiere Pro.
 
-**Version** : 1.1.4  
+**Version** : 1.1.5  
