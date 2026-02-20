@@ -6,6 +6,7 @@ var allDetectedBeats = []; // Stores all raw detected beats
 var filteredBeats = []; // Stores beats after subdivision
 var subdivision = 1; // 1, 2, or 4
 var clipStartOffset = 0; // Start time of the clip on the timeline
+var autoAnalyzeTimer = null; // Debounce automatic analysis across decode/ready events
 
 function toWaveSurferUrl(pathOrUrl) {
     // Keep already valid URLs untouched (http, https, file, blob, etc.).
@@ -220,31 +221,82 @@ function initWaveSurfer() {
         insertPosition: 'afterend'
     }));
 
+    wavesurfer.on('load', function () {
+        // Keep users informed during fetch/decode, especially on slower CEP hosts.
+        document.getElementById('status-msg').textContent = "Loading audio data...";
+    });
+
+    wavesurfer.on('decode', function () {
+        // Prefer decode event for stable buffer availability on older CEP runtimes.
+        audioBuffer = wavesurfer.getDecodedData();
+        scheduleAutoAnalysis('decode');
+    });
+
     wavesurfer.on('ready', function () {
+        document.getElementById('status-msg').textContent = "Audio loaded. Preparing analysis...";
+
+        // Keep any existing decoded buffer if this host fires ready before decode.
+        var decoded = wavesurfer.getDecodedData();
+        if (decoded) {
+            audioBuffer = decoded;
+        }
+        scheduleAutoAnalysis('ready');
+    });
+
+    wavesurfer.on('error', function (error) {
+        console.error('[WaveSurfer] Audio load/decode error:', error);
+        document.getElementById('status-msg').textContent =
+            "Audio loaded but decode failed. Try 'Select Audio File' on a local file.";
+    });
+}
+
+function scheduleAutoAnalysis(sourceEvent) {
+    if (autoAnalyzeTimer) {
+        clearTimeout(autoAnalyzeTimer);
+    }
+
+    // Debounce so decode/ready firing order differences do not trigger duplicate runs.
+    autoAnalyzeTimer = setTimeout(function () {
+        runAutoAnalysis(sourceEvent);
+    }, 120);
+}
+
+function runAutoAnalysis(sourceEvent) {
+    try {
+        // Re-check decoded data at runtime for CEP hosts where decode arrives late.
+        var decoded = wavesurfer.getDecodedData();
+        if (decoded) {
+            audioBuffer = decoded;
+        }
+
+        if (!audioBuffer || typeof audioBuffer.getChannelData !== 'function') {
+            document.getElementById('status-msg').textContent =
+                "Audio loaded, but analysis data is unavailable on this host.";
+            console.warn('[Analysis] Missing decoded buffer after', sourceEvent);
+            return;
+        }
+
         document.getElementById('status-msg').textContent = "Audio loaded. Analyzing...";
 
-        // Get the decoded audio buffer
-        audioBuffer = wavesurfer.getDecodedData();
+        // Quick BPM detection used to initialize the manual grid controls.
+        var threshold = 0.35;
+        var minDistance = 0.45;
+        var detectionResult = detectFirstBeatAndTempo(audioBuffer, threshold, minDistance, true);
 
-        // Auto-detect BPM and analyze on load
-        setTimeout(function () {
-            // Quick BPM detection
-            var threshold = 0.35;
-            var minDistance = 0.45;
-            var detectionResult = detectFirstBeatAndTempo(audioBuffer, threshold, minDistance, true);
+        // Update BPM slider with detected tempo.
+        document.getElementById('bpm').value = Math.round(detectionResult.tempo);
+        document.getElementById('bpm-val').textContent = Math.round(detectionResult.tempo) + ' BPM';
 
-            // Update BPM slider with detected tempo
-            document.getElementById('bpm').value = Math.round(detectionResult.tempo);
-            document.getElementById('bpm-val').textContent = Math.round(detectionResult.tempo) + ' BPM';
+        // Update first beat offset.
+        document.getElementById('first-beat').value = detectionResult.firstBeat;
+        document.getElementById('first-beat-val').textContent = detectionResult.firstBeat.toFixed(3) + 's';
 
-            // Update first beat offset
-            document.getElementById('first-beat').value = detectionResult.firstBeat;
-            document.getElementById('first-beat-val').textContent = detectionResult.firstBeat.toFixed(3) + 's';
-
-            // Run analysis
-            analyzeBeats();
-        }, 100);
-    });
+        analyzeBeats();
+    } catch (e) {
+        console.error('[Analysis] Auto-analysis failed:', e);
+        document.getElementById('status-msg').textContent =
+            "Analysis failed on this host. Open Console (F12) for details.";
+    }
 }
 
 function setupEventListeners() {
@@ -380,6 +432,11 @@ function loadAudio(url, name) {
     // Reset state
     allDetectedBeats = [];
     filteredBeats = [];
+    audioBuffer = null;
+    if (autoAnalyzeTimer) {
+        clearTimeout(autoAnalyzeTimer);
+        autoAnalyzeTimer = null;
+    }
     wsRegions.clearRegions();
     document.getElementById('btn-create-markers').disabled = true;
 

@@ -157,6 +157,11 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 - The clip must have audio
 - Try using "Select Audio File" to load a file directly
 
+### Audio Loads But No Analysis
+- If waveform/audio appears but analysis does not start, try **Select Audio File** with a local file path
+- Avoid network/UNC paths when possible on older Premiere/CEP hosts
+- Open Console (F12) and check for decode/CORS errors
+
 ### Markers Not Created
 - Make sure you have analyzed the audio first
 - For clip markers, ensure a clip is selected in the timeline
@@ -321,6 +326,11 @@ C:\Users\[VotreNomUtilisateur]\AppData\Roaming\Adobe\CEP\extensions\com.antigrav
 - Assurez-vous d'avoir un clip sélectionné dans la timeline
 - Le clip doit contenir de l'audio
 - Essayez "Select Audio File" pour charger directement un fichier
+
+### Audio chargé mais pas d'analyse
+- Si la waveform/audio est visible mais que l'analyse ne démarre pas, essayez **Select Audio File** avec un fichier local
+- Évitez les chemins réseau/UNC sur les hôtes Premiere/CEP plus anciens
+- Ouvrez la Console (F12) et vérifiez les erreurs de décodage/CORS
 
 ### Marqueurs non créés
 - Analysez d'abord l'audio
