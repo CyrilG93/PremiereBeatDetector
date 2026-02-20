@@ -77,6 +77,7 @@ Or for user-only installation:
 1. Open the extension folder
 2. Run `install-windows.bat`
 The installer enables debug mode automatically.
+It stays open and waits for a key press before closing.
 
 #### Step 2: Restart Premiere Pro
 Go to **Window** > **Extensions** > **Beat Detector**
@@ -156,7 +157,6 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 - Try using "Select Audio File" to load a file directly
 
 ### Markers Not Created
-- Check the browser console (F12) for error messages
 - Make sure you have analyzed the audio first
 - For clip markers, ensure a clip is selected in the timeline
 - Try using sequence markers instead
@@ -183,11 +183,27 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 This extension is provided as-is for use with Adobe Premiere Pro.
 
 **Version**: 1.1.4  
-**Author**: Cyril V
 
 ---
 
 # Français
+
+---
+
+## ✨ Fonctionnalités
+
+- **Détection automatique du BPM** - Algorithme avancé avec analyse multi-octave
+- **Deux modes de détection** :
+  - **Mode grille manuelle** - Grille de beats parfaite basée sur le BPM (recommandé)
+  - **Mode algorithmique** - Boucle à verrouillage de phase pour les rythmes complexes
+- **Prévisualisation en temps réel** - Marqueurs visuels sur la forme d'onde
+- **Contrôle précis** - Ajustement manuel du BPM avec précision de 1ms
+- **Marqueurs précis au frame** - Alignement automatique sur les frames
+- **Lecture audio** - Prévisualisez votre audio avec pause/reprise
+- **Support de subdivision** - Créez des marqueurs sur les temps, demi-temps ou quarts
+- **Placement flexible** - Choix entre marqueurs de clip ou de séquence
+
+---
 
 ## 📋 Prérequis
 
@@ -242,6 +258,7 @@ Ou pour une installation utilisateur uniquement :
 1. Ouvrez le dossier de l'extension
 2. Lancez `install-windows.bat`
 L'installateur active automatiquement le mode debug.
+Il reste ouvert et attend une touche avant de se fermer.
 
 #### Étape 2 : Redémarrer Premiere Pro
 Allez dans **Fenêtre** > **Extensions** > **Beat Detector**
@@ -261,20 +278,6 @@ Ou pour une installation utilisateur uniquement (sans admin) :
 ```
 C:\Users\[VotreNomUtilisateur]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
----
-
-## ✨ Fonctionnalités
-
-- **Détection automatique du BPM** - Algorithme avancé avec analyse multi-octave
-- **Deux modes de détection** :
-  - **Mode grille manuelle** - Grille de beats parfaite basée sur le BPM (recommandé)
-  - **Mode algorithmique** - Boucle à verrouillage de phase pour les rythmes complexes
-- **Prévisualisation en temps réel** - Marqueurs visuels sur la forme d'onde
-- **Contrôle précis** - Ajustement manuel du BPM avec précision de 1ms
-- **Marqueurs précis au frame** - Alignement automatique sur les frames
-- **Lecture audio** - Prévisualisez votre audio avec pause/reprise
-- **Support de subdivision** - Créez des marqueurs sur les temps, demi-temps ou quarts
-- **Placement flexible** - Choix entre marqueurs de clip ou de séquence
 
 ---
 
@@ -318,7 +321,6 @@ C:\Users\[VotreNomUtilisateur]\AppData\Roaming\Adobe\CEP\extensions\com.antigrav
 - Essayez "Select Audio File" pour charger directement un fichier
 
 ### Marqueurs non créés
-- Vérifiez la console du navigateur (F12) pour les erreurs
 - Analysez d'abord l'audio
 - Pour les marqueurs de clip, sélectionnez un clip dans la timeline
 
@@ -339,4 +341,3 @@ C:\Users\[VotreNomUtilisateur]\AppData\Roaming\Adobe\CEP\extensions\com.antigrav
 Extension fournie telle quelle pour Adobe Premiere Pro.
 
 **Version** : 1.1.4  
-**Auteur** : Cyril V

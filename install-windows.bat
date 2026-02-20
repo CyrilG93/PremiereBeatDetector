@@ -1,5 +1,5 @@
 @echo off
-setlocal enableextensions
+setlocal enableextensions enabledelayedexpansion
 :: Beat Detector - Windows Installation Script
 :: Version 1.1.4
 
@@ -33,7 +33,7 @@ echo Step 2/2: Installing extension files...
 if not exist "%SOURCE_DIR%client" (
     echo ERROR: Extension files not found!
     echo This script must be run from the extension folder.
-    pause
+    call :wait_for_close
     exit /b 1
 )
 
@@ -46,9 +46,9 @@ if not defined EXTENSION_PATH (
     if not exist "%EXTENSION_PATH%" mkdir "%EXTENSION_PATH%" >nul 2>&1
     if not exist "%EXTENSION_PATH%" (
         echo ERROR: Could not create extension folder:
-        echo %EXTENSION_PATH%
+        echo !EXTENSION_PATH!
         echo.
-        pause
+        call :wait_for_close
         exit /b 1
     )
     echo [INFO] Installing for current user (no system write access).
@@ -70,9 +70,9 @@ if exist "%SOURCE_DIR%README.md" copy /Y "%SOURCE_DIR%README.md" "%EXTENSION_PAT
 
 if "%COPY_FAILED%"=="1" (
     echo ERROR: Failed to copy one or more extension folders.
-    echo Target path: %EXTENSION_PATH%
+    echo Target path: !EXTENSION_PATH!
     echo.
-    pause
+    call :wait_for_close
     exit /b 1
 )
 
@@ -89,7 +89,7 @@ echo 1. Restart Adobe Premiere Pro
 echo 2. Go to Window ^> Extensions ^> Beat Detector
 echo 3. Load an audio clip and detect beats!
 echo.
-pause
+call :wait_for_close
 exit /b 0
 
 :try_system_path
@@ -108,4 +108,9 @@ if exist "%WRITE_TEST_FILE%" (
     del /Q "%WRITE_TEST_FILE%" >nul 2>&1
     set "EXTENSION_PATH=%CANDIDATE%"
 )
+goto :eof
+
+:wait_for_close
+echo Press any key to close this window...
+pause >nul
 goto :eof
