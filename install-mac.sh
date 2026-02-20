@@ -1,6 +1,6 @@
 #!/bin/bash
 # Beat Detector - macOS Installation Script
-# Version 1.1.3
+# Version 1.1.4
 
 echo ""
 echo "========================================"
@@ -10,7 +10,7 @@ echo ""
 
 # Get script directory
 SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
-EXTENSION_PATH="/Library/Application Support/Adobe/CEP/extensions/PremiereBeatDetector"
+EXTENSION_PATH="/Library/Application Support/Adobe/CEP/extensions/com.antigravity.beatdetector"
 
 echo "Source: $SOURCE_DIR"
 echo "Target: $EXTENSION_PATH"
@@ -40,6 +40,7 @@ fi
 echo "Step 1/2: Enabling CEP debug mode..."
 defaults write com.adobe.CSXS.11 PlayerDebugMode 1
 defaults write com.adobe.CSXS.12 PlayerDebugMode 1
+defaults write com.adobe.CSXS.13 PlayerDebugMode 1
 echo "[OK] Debug mode enabled"
 
 # Step 2: Copy extension files

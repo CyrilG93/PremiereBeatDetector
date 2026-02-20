@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // ============================================================================
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
-let CURRENT_VERSION = '1.1.3';
+let CURRENT_VERSION = '1.1.4';
 
 /**
  * Compare two version strings (e.g. "1.0.0" vs "1.0.1")
