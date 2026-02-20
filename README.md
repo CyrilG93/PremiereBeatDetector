@@ -25,16 +25,26 @@ This extension is **self-contained** and requires no external dependencies!
 
 ### macOS
 
-#### Step 1: Enable Debug Mode
-Open Terminal and run:
+#### Recommended installation
+1. Open Terminal in the extension folder
+2. Run:
+```bash
+chmod +x install-mac.sh
+./install-mac.sh
+```
+The installer enables debug mode automatically.
+
+#### Step 2: Restart Premiere Pro
+Go to **Window** > **Extensions** > **Beat Detector**
+
+#### Manual installation only (if script cannot be used)
+Enable debug mode in Terminal:
 ```bash
 defaults write com.adobe.CSXS.11 PlayerDebugMode 1
 defaults write com.adobe.CSXS.12 PlayerDebugMode 1
+defaults write com.adobe.CSXS.13 PlayerDebugMode 1
 ```
-*Note: For Premiere Pro 2023 or earlier, you may also need CSXS.10*
-
-#### Step 2: Install Extension
-Copy the `PremiereBeatDetector` folder to:
+Then copy the extension folder to:
 ```
 /Library/Application Support/Adobe/CEP/extensions/
 ```
@@ -43,28 +53,26 @@ Or for user-only installation:
 ~/Library/Application Support/Adobe/CEP/extensions/
 ```
 
-> **Tip**: Create the `extensions` folder if it doesn't exist.
-
-#### Step 3: Restart Premiere Pro
-Go to **Window** > **Extensions** > **Beat Detector**
-
 ---
 
 ### Windows
 
-#### Step 1: Enable Debug Mode
+#### Recommended installation
+1. Open the extension folder
+2. Run `install-windows.bat`
+The installer enables debug mode automatically.
+
+#### Step 2: Restart Premiere Pro
+Go to **Window** > **Extensions** > **Beat Detector**
+
+#### Manual installation only (if script cannot be used)
 1. Press `Win + R`, type `regedit`, press Enter
 2. Navigate to: `HKEY_CURRENT_USER\Software\Adobe\CSXS.11`
 3. Right-click > New > String Value
 4. Name: `PlayerDebugMode`
 5. Double-click and set Value: `1`
-6. Repeat for `CSXS.12` if using Premiere Pro 2024+
-7. For newer Premiere versions, also set `PlayerDebugMode` in `CSXS.13`
-
-#### Step 2: Install Extension
-Recommended: run `install-windows.bat` from the extension folder.
-
-Manual install: copy the extension to:
+6. Repeat for `CSXS.12` and `CSXS.13`
+7. Copy the extension to:
 ```
 C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
@@ -72,12 +80,6 @@ Or for user-only installation (no admin):
 ```
 C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
-
-> **Tip**: Create the `extensions` folder if it doesn't exist.
-
-#### Step 3: Restart Premiere Pro
-Go to **Window** > **Extensions** > **Beat Detector**
-
 ---
 
 ## ✨ Features
@@ -203,15 +205,26 @@ Cette extension est **autonome** et ne nécessite aucune dépendance externe !
 
 ### macOS
 
-#### Étape 1 : Activer le mode debug
-Ouvrez le Terminal et exécutez :
+#### Installation recommandée
+1. Ouvrez le Terminal dans le dossier de l'extension
+2. Lancez :
+```bash
+chmod +x install-mac.sh
+./install-mac.sh
+```
+L'installateur active automatiquement le mode debug.
+
+#### Étape 2 : Redémarrer Premiere Pro
+Allez dans **Fenêtre** > **Extensions** > **Beat Detector**
+
+#### Installation manuelle uniquement (si le script ne peut pas être utilisé)
+Activez le mode debug dans le Terminal :
 ```bash
 defaults write com.adobe.CSXS.11 PlayerDebugMode 1
 defaults write com.adobe.CSXS.12 PlayerDebugMode 1
+defaults write com.adobe.CSXS.13 PlayerDebugMode 1
 ```
-
-#### Étape 2 : Installer l'extension
-Copiez le dossier `PremiereBeatDetector` vers :
+Puis copiez le dossier de l'extension vers :
 ```
 /Library/Application Support/Adobe/CEP/extensions/
 ```
@@ -220,28 +233,26 @@ Ou pour une installation utilisateur uniquement :
 ~/Library/Application Support/Adobe/CEP/extensions/
 ```
 
-> **Conseil** : Créez le dossier `extensions` s'il n'existe pas.
-
-#### Étape 3 : Redémarrer Premiere Pro
-Allez dans **Fenêtre** > **Extensions** > **Beat Detector**
-
 ---
 
 ### Windows
 
-#### Étape 1 : Activer le mode debug
+#### Installation recommandée
+1. Ouvrez le dossier de l'extension
+2. Lancez `install-windows.bat`
+L'installateur active automatiquement le mode debug.
+
+#### Étape 2 : Redémarrer Premiere Pro
+Allez dans **Fenêtre** > **Extensions** > **Beat Detector**
+
+#### Installation manuelle uniquement (si le script ne peut pas être utilisé)
 1. Appuyez sur `Win + R`, tapez `regedit`, appuyez sur Entrée
 2. Naviguez vers : `HKEY_CURRENT_USER\Software\Adobe\CSXS.11`
 3. Clic droit > Nouveau > Valeur chaîne
 4. Nom : `PlayerDebugMode`
 5. Double-cliquez et définissez la valeur : `1`
-6. Répétez pour `CSXS.12` si vous utilisez Premiere Pro 2024+
-7. Pour les versions plus récentes de Premiere, ajoutez aussi `PlayerDebugMode` dans `CSXS.13`
-
-#### Étape 2 : Installer l'extension
-Recommandé : exécutez `install-windows.bat` depuis le dossier de l'extension.
-
-Installation manuelle : copiez l'extension vers :
+6. Répétez pour `CSXS.12` et `CSXS.13`
+7. Copiez l'extension vers :
 ```
 C:\Program Files (x86)\Common Files\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
@@ -249,12 +260,6 @@ Ou pour une installation utilisateur uniquement (sans admin) :
 ```
 C:\Users\[VotreNomUtilisateur]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.beatdetector
 ```
-
-> **Conseil** : Créez le dossier `extensions` s'il n'existe pas.
-
-#### Étape 3 : Redémarrer Premiere Pro
-Allez dans **Fenêtre** > **Extensions** > **Beat Detector**
-
 ---
 
 ## ✨ Fonctionnalités
