@@ -42,10 +42,12 @@ This extension is **self-contained** and requires no external dependencies!
 ### macOS
 
 #### Recommended installation
+1. Open terminal and drag and drop install-mac.sh on it and launch it.
+
+Or:
 1. Open Terminal in the extension folder
 2. Run:
 ```bash
-chmod +x install-mac.sh
 ./install-mac.sh
 ```
 The installer enables debug mode automatically.
