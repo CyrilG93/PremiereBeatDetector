@@ -231,9 +231,11 @@ Cette extension est **autonome** et ne nécessite aucune dépendance externe !
 ### macOS
 
 #### Installation recommandée
-1. Ouvrez le Terminal dans le dossier de l'extension
-2. Lancez :
+1. Ouvrez le Terminal.
+2. **Méthode la plus simple (recommandée)** : glissez-déposez `install-mac.sh` dans la fenêtre du Terminal, puis appuyez sur Entrée.
+3. **Méthode manuelle (ligne de commande)** : allez dans le dossier de l'extension puis lancez :
 ```bash
+cd /chemin/vers/PremiereBeatDetector
 chmod +x install-mac.sh
 ./install-mac.sh
 ```
