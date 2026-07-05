@@ -241,4 +241,5 @@ button:disabled {
     margin-left: 8px;
     font-weight: normal;
     vertical-align: middle;
+    cursor: pointer;
 }

@@ -39,7 +39,46 @@ document.addEventListener('DOMContentLoaded', function () {
 // ============================================================================
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
-let CURRENT_VERSION = '1.1.5';
+const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
+let CURRENT_VERSION = '1.1.6';
+
+// Open product and update links through CEP, with a browser fallback for local testing.
+function openExternalUrl(url) {
+    try {
+        if (csInterface && typeof csInterface.openURLInDefaultBrowser === 'function') {
+            csInterface.openURLInDefaultBrowser(url);
+            return;
+        }
+    } catch (e) {
+        console.error('[Link] Error opening URL through CEP:', e);
+    }
+
+    try {
+        var popup = window.open(url, '_blank');
+        if (!popup) {
+            window.location.href = url;
+        }
+    } catch (fallbackError) {
+        console.error('[Link] Browser fallback failed:', fallbackError);
+    }
+}
+
+// Keep the existing badge layout while making the version clickable from mouse and keyboard.
+function bindVersionBadgeLink(versionBadge, localVersion) {
+    versionBadge.setAttribute('role', 'button');
+    versionBadge.setAttribute('tabindex', '0');
+    versionBadge.setAttribute('title', 'Open Beat Detector page');
+    versionBadge.setAttribute('aria-label', 'Open Beat Detector page for version ' + localVersion);
+    versionBadge.onclick = function () {
+        openExternalUrl(PRODUCT_PAGE_URL);
+    };
+    versionBadge.onkeydown = function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openExternalUrl(PRODUCT_PAGE_URL);
+        }
+    };
+}
 
 /**
  * Compare two version strings (e.g. "1.0.0" vs "1.0.1")
@@ -90,6 +129,7 @@ async function checkForUpdates() {
     const versionBadge = document.getElementById('versionInfo');
     if (versionBadge) {
         versionBadge.textContent = 'v' + localVersion;
+        bindVersionBadgeLink(versionBadge, localVersion);
     }
 
     try {
@@ -178,17 +218,7 @@ function showUpdateBanner(downloadUrl) {
 
         banner.onclick = function () {
             if (downloadUrl) {
-                try {
-                    csInterface.openURLInDefaultBrowser(downloadUrl);
-                } catch (e) {
-                    console.error('[Update] Error opening URL:', e);
-                    // Fallback
-                    try {
-                        window.location.href = downloadUrl;
-                    } catch (e2) {
-                        console.error('[Update] Fallback failed:', e2);
-                    }
-                }
+                openExternalUrl(downloadUrl);
             }
         };
     }
