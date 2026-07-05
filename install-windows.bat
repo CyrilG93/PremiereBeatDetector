@@ -1,7 +1,7 @@
 @echo off
 setlocal enableextensions enabledelayedexpansion
 :: Beat Detector - Windows Installation Script
-:: Version 1.1.6
+:: Version 1.1.7
 
 title Beat Detector - Installation
 
@@ -13,12 +13,10 @@ echo.
 
 set "SOURCE_DIR=%~dp0"
 set "EXTENSION_ID=com.antigravity.beatdetector"
-set "SYSTEM_EXT_PATH_X86=%ProgramFiles(x86)%\Common Files\Adobe\CEP\extensions\%EXTENSION_ID%"
-set "SYSTEM_EXT_PATH_X64=%ProgramFiles%\Common Files\Adobe\CEP\extensions\%EXTENSION_ID%"
 set "USER_EXT_PATH=%APPDATA%\Adobe\CEP\extensions\%EXTENSION_ID%"
-set "EXTENSION_PATH="
+set "EXTENSION_PATH=%USER_EXT_PATH%"
 
-:: Step 1: Enable debug mode
+REM // Step 1: Enable CEP debug mode for common Premiere/CEP runtimes.
 echo Step 1/2: Enabling CEP debug mode...
 reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.11" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
 reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.12" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul 2>&1
@@ -26,42 +24,34 @@ reg add "HKEY_CURRENT_USER\Software\Adobe\CSXS.13" /v PlayerDebugMode /t REG_SZ 
 echo [OK] Debug mode enabled
 echo.
 
-:: Step 2: Copy extension files
+REM // Step 2: Copy extension files from the extracted installer folder.
 echo Step 2/2: Installing extension files...
 
-:: Check source files exist
-if not exist "%SOURCE_DIR%client\main.js" (
+REM // Check source files exist before touching the install target.
+if not exist "!SOURCE_DIR!client\main.js" (
     echo ERROR: Extension files not found!
     echo Make sure the ZIP is fully extracted and run this script from that extracted folder.
     call :wait_for_close
     exit /b 1
 )
-if not exist "%SOURCE_DIR%host\index.jsx" (
+if not exist "!SOURCE_DIR!host\index.jsx" (
     echo ERROR: Extension files not found!
     echo Make sure the ZIP is fully extracted and run this script from that extracted folder.
     call :wait_for_close
     exit /b 1
 )
-if not exist "%SOURCE_DIR%CSXS\manifest.xml" (
+if not exist "!SOURCE_DIR!CSXS\manifest.xml" (
     echo ERROR: Extension files not found!
     echo Make sure the ZIP is fully extracted and run this script from that extracted folder.
     call :wait_for_close
     exit /b 1
 )
 
-:: Prefer system install when writable; fallback to user profile if not.
-call :try_system_path "%SYSTEM_EXT_PATH_X86%"
-if not defined EXTENSION_PATH call :try_system_path "%SYSTEM_EXT_PATH_X64%"
+REM // Install in the current user CEP folder so double-click installs do not need admin rights.
+echo [INFO] Installing for current user.
 
-if not defined EXTENSION_PATH (
-    set "EXTENSION_PATH=%USER_EXT_PATH%"
-    echo [INFO] Installing for current user (no system write access).
-) else (
-    echo [OK] Installing to system extensions folder.
-)
-
-if not exist "%EXTENSION_PATH%" mkdir "%EXTENSION_PATH%" >nul 2>&1
-if not exist "%EXTENSION_PATH%" (
+if not exist "!EXTENSION_PATH!" mkdir "!EXTENSION_PATH!" >nul 2>&1
+if not exist "!EXTENSION_PATH!" (
     echo ERROR: Could not create extension folder:
     echo !EXTENSION_PATH!
     echo.
@@ -69,31 +59,31 @@ if not exist "%EXTENSION_PATH%" (
     exit /b 1
 )
 
-:: Copy files
+REM // Copy runtime folders and optional metadata into the chosen CEP extension folder.
 set "COPY_FAILED=0"
-xcopy /Y /E /I /Q "%SOURCE_DIR%client" "%EXTENSION_PATH%\client\" >nul
+xcopy /Y /E /I /Q "!SOURCE_DIR!client" "!EXTENSION_PATH!\client\" >nul
 if errorlevel 1 set "COPY_FAILED=1"
-xcopy /Y /E /I /Q "%SOURCE_DIR%host" "%EXTENSION_PATH%\host\" >nul
+xcopy /Y /E /I /Q "!SOURCE_DIR!host" "!EXTENSION_PATH!\host\" >nul
 if errorlevel 1 set "COPY_FAILED=1"
-xcopy /Y /E /I /Q "%SOURCE_DIR%CSXS" "%EXTENSION_PATH%\CSXS\" >nul
-if errorlevel 1 set "COPY_FAILED=1"
-
-if exist "%SOURCE_DIR%.debug" copy /Y "%SOURCE_DIR%.debug" "%EXTENSION_PATH%\.debug" >nul
-if errorlevel 1 set "COPY_FAILED=1"
-if exist "%SOURCE_DIR%README.md" copy /Y "%SOURCE_DIR%README.md" "%EXTENSION_PATH%\README.md" >nul
+xcopy /Y /E /I /Q "!SOURCE_DIR!CSXS" "!EXTENSION_PATH!\CSXS\" >nul
 if errorlevel 1 set "COPY_FAILED=1"
 
-if "%COPY_FAILED%"=="1" (
+if exist "!SOURCE_DIR!.debug" copy /Y "!SOURCE_DIR!.debug" "!EXTENSION_PATH!\.debug" >nul
+if errorlevel 1 set "COPY_FAILED=1"
+if exist "!SOURCE_DIR!README.md" copy /Y "!SOURCE_DIR!README.md" "!EXTENSION_PATH!\README.md" >nul
+if errorlevel 1 set "COPY_FAILED=1"
+
+if "!COPY_FAILED!"=="1" (
     echo ERROR: Failed to copy one or more extension folders.
     echo Target path: !EXTENSION_PATH!
-    echo Make sure this script is run from an extracted folder (not directly from a ZIP).
+    echo Make sure this script is run from an extracted folder ^(not directly from a ZIP^).
     echo.
     call :wait_for_close
     exit /b 1
 )
 
 echo [OK] Extension installed successfully
-echo [OK] Installed to: %EXTENSION_PATH%
+echo [OK] Installed to: !EXTENSION_PATH!
 echo.
 
 echo ========================================
@@ -107,21 +97,6 @@ echo 3. Load an audio clip and detect beats!
 echo.
 call :wait_for_close
 exit /b 0
-
-:try_system_path
-set "CANDIDATE=%~1"
-if "%CANDIDATE%"=="" goto :eof
-
-for %%P in ("%CANDIDATE%") do set "CANDIDATE_PARENT=%%~dpP"
-if not exist "%CANDIDATE_PARENT%" goto :eof
-
-set "WRITE_TEST_FILE=%CANDIDATE_PARENT%.__beatdetector_write_test"
-type nul > "%WRITE_TEST_FILE%" 2>nul
-if exist "%WRITE_TEST_FILE%" (
-    del /Q "%WRITE_TEST_FILE%" >nul 2>&1
-    set "EXTENSION_PATH=%CANDIDATE%"
-)
-goto :eof
 
 :wait_for_close
 echo Press any key to close this window...

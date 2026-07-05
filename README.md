@@ -77,6 +77,7 @@ Or for user-only installation:
 1. Open the extension folder
 2. Run `install-windows.bat`
 The installer enables debug mode automatically.
+It installs Beat Detector for the current Windows user, without administrator rights.
 It stays open and waits for a key press before closing.
 Important: extract the ZIP first, do not run the installer directly from a compressed folder.
 
@@ -188,7 +189,7 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 
 This extension is provided as-is for use with Adobe Premiere Pro.
 
-**Version**: 1.1.6  
+**Version**: 1.1.7
 
 ---
 

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
 const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
-let CURRENT_VERSION = '1.1.6';
+let CURRENT_VERSION = '1.1.7';
 
 // Open product and update links through CEP, with a browser fallback for local testing.
 function openExternalUrl(url) {
