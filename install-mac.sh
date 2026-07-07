@@ -1,6 +1,6 @@
 #!/bin/bash
 # Beat Detector - macOS Installation Script
-# Version 1.1.8
+# Version 1.1.9
 
 echo ""
 echo "========================================"
@@ -10,21 +10,14 @@ echo ""
 
 # Get script directory
 SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
-EXTENSION_PATH="/Library/Application Support/Adobe/CEP/extensions/com.antigravity.beatdetector"
+EXTENSIONS_DIR="$HOME/Library/Application Support/Adobe/CEP/extensions"
+EXTENSION_PATH="$EXTENSIONS_DIR/com.antigravity.beatdetector"
+SYSTEM_EXTENSION_PATH="/Library/Application Support/Adobe/CEP/extensions/com.antigravity.beatdetector"
 
 echo "Source: $SOURCE_DIR"
 echo "Target: $EXTENSION_PATH"
 echo ""
-
-# Check for sudo and auto-elevate if needed
-if [ "$EUID" -ne 0 ]; then
-    echo "This script requires administrator privileges."
-    echo "Requesting sudo permissions..."
-    sudo "$0" "$@"
-    exit $?
-fi
-
-echo "[OK] Running with appropriate permissions"
+echo "[OK] Installing for current user only. No administrator password is required."
 echo ""
 
 # Check if already installed
@@ -38,9 +31,12 @@ fi
 
 # Step 1: Enable debug mode
 echo "Step 1/2: Enabling CEP debug mode..."
-defaults write com.adobe.CSXS.11 PlayerDebugMode 1
-defaults write com.adobe.CSXS.12 PlayerDebugMode 1
-defaults write com.adobe.CSXS.13 PlayerDebugMode 1
+# Enable PlayerDebugMode for a broad range of CEP hosts without requiring admin rights.
+CSXS_VERSION=7
+while [ "$CSXS_VERSION" -le 20 ]; do
+    defaults write "com.adobe.CSXS.$CSXS_VERSION" PlayerDebugMode 1
+    CSXS_VERSION=$((CSXS_VERSION + 1))
+done
 echo "[OK] Debug mode enabled"
 
 # Step 2: Copy extension files
@@ -55,24 +51,31 @@ if [ "$SKIP_COPY" = "0" ]; then
         exit 1
     fi
     
-    # Create extensions directory if needed
-    if [ ! -d "/Library/Application Support/Adobe/CEP/extensions" ]; then
-        mkdir -p "/Library/Application Support/Adobe/CEP/extensions"
+    # Create the per-user CEP extensions directory if needed.
+    if [ ! -d "$EXTENSIONS_DIR" ]; then
+        mkdir -p "$EXTENSIONS_DIR"
     fi
-    
-    # Remove old installation if exists
-    if [ -d "$EXTENSION_PATH" ]; then
-        rm -rf "$EXTENSION_PATH"
+
+    if [ $? -ne 0 ]; then
+        echo "[ERROR] Failed to create user extension folder"
+        exit 1
     fi
-    
-    # Copy files
-    cp -R "$SOURCE_DIR" "$EXTENSION_PATH"
-    
+
+    # Merge files into the user extension folder without deleting user-accessible data first.
+    ditto "$SOURCE_DIR" "$EXTENSION_PATH"
+
     if [ $? -eq 0 ]; then
         echo "[OK] Extension installed successfully"
     else
         echo "[ERROR] Failed to copy extension files"
         exit 1
+    fi
+
+    if [ -d "$SYSTEM_EXTENSION_PATH" ]; then
+        echo ""
+        echo "Note: an older system-wide installation also exists:"
+        echo "$SYSTEM_EXTENSION_PATH"
+        echo "Beat Detector is now installed for this user. If Premiere still loads the old copy, ask an administrator to remove the system-wide folder."
     fi
 else
     echo ""

@@ -41,7 +41,7 @@ This extension is **self-contained** and requires no external dependencies!
 ### macOS
 
 #### Recommended installation
-1. Open terminal and drag and drop install-mac.sh on it and launch it.
+1. Open terminal and drag and drop `install-mac.sh` on it and launch it.
 
 Or:
 1. Open Terminal in the extension folder
@@ -49,7 +49,7 @@ Or:
 ```bash
 ./install-mac.sh
 ```
-The installer enables debug mode automatically.
+The installer enables debug mode automatically and installs Beat Detector for the current user, without administrator rights.
 
 #### Step 2: Restart Premiere Pro
 Go to **Window** > **Extensions** > **Beat Detector**
@@ -61,11 +61,7 @@ defaults write com.adobe.CSXS.11 PlayerDebugMode 1
 defaults write com.adobe.CSXS.12 PlayerDebugMode 1
 defaults write com.adobe.CSXS.13 PlayerDebugMode 1
 ```
-Then copy the extension folder to:
-```
-/Library/Application Support/Adobe/CEP/extensions/
-```
-Or for user-only installation:
+Then copy the extension folder to the user extensions folder:
 ```
 ~/Library/Application Support/Adobe/CEP/extensions/
 ```
@@ -190,6 +186,6 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 
 This extension is provided as-is for use with Adobe Premiere Pro.
 
-**Version**: 1.1.8
+**Version**: 1.1.9
 
 ---

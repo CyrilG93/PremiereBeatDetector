@@ -1,7 +1,7 @@
 @echo off
 setlocal enableextensions enabledelayedexpansion
 :: Beat Detector - Windows Installation Script
-:: Version 1.1.8
+:: Version 1.1.9
 
 title Beat Detector - Installation
 
