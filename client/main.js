@@ -28,7 +28,177 @@ function toWaveSurferUrl(pathOrUrl) {
     return pathOrUrl;
 }
 
+var CEP_THEME_COLOR_CHANGED_EVENT = 'com.adobe.csxs.events.ThemeColorChanged';
+
+function clampThemeChannel(value) {
+    // Keep CEP RGB channels inside the valid CSS color range.
+    var numericValue = Number(value);
+    if (!isFinite(numericValue)) {
+        return null;
+    }
+
+    return Math.max(0, Math.min(255, Math.round(numericValue)));
+}
+
+function readThemeRgbTriplet(value) {
+    // Read direct CEP RGB payloads shaped as { red, green, blue }.
+    if (!value || typeof value !== 'object') {
+        return null;
+    }
+
+    var red = clampThemeChannel(value.red);
+    var green = clampThemeChannel(value.green);
+    var blue = clampThemeChannel(value.blue);
+    if (red === null || green === null || blue === null) {
+        return null;
+    }
+
+    return { red: red, green: green, blue: blue };
+}
+
+function readThemeColor(value) {
+    // Support both CEP RGBColor and UIColor.color shapes from appSkinInfo.
+    return readThemeRgbTriplet(value) || (value && readThemeRgbTriplet(value.color));
+}
+
+function mixThemeColor(left, right, rightWeight) {
+    // Blend two RGB colors so derived surfaces stay near Premiere's host color.
+    var clampedWeight = Math.max(0, Math.min(1, rightWeight));
+    var leftWeight = 1 - clampedWeight;
+    return {
+        red: Math.round(left.red * leftWeight + right.red * clampedWeight),
+        green: Math.round(left.green * leftWeight + right.green * clampedWeight),
+        blue: Math.round(left.blue * leftWeight + right.blue * clampedWeight)
+    };
+}
+
+function offsetThemeColor(color, delta) {
+    // Nudge a neutral color brighter or darker without leaving RGB bounds.
+    return {
+        red: Math.max(0, Math.min(255, Math.round(color.red + delta))),
+        green: Math.max(0, Math.min(255, Math.round(color.green + delta))),
+        blue: Math.max(0, Math.min(255, Math.round(color.blue + delta)))
+    };
+}
+
+function themeLuminance(color) {
+    // Estimate perceived brightness to separate Light, Dark, and Darkest Premiere skins.
+    return (0.2126 * color.red + 0.7152 * color.green + 0.0722 * color.blue) / 255;
+}
+
+function normalizePanelBackground(color) {
+    // Keep the main panel close to Premiere's host background, including Darkest mode.
+    var luminance = themeLuminance(color);
+    if (luminance <= 0.16) {
+        return mixThemeColor(color, { red: 24, green: 24, blue: 24 }, luminance <= 0.04 ? 0.65 : 0.12);
+    }
+    if (luminance <= 0.32) {
+        return mixThemeColor(color, { red: 58, green: 58, blue: 58 }, 0.42);
+    }
+    if (luminance >= 0.7) {
+        return mixThemeColor(color, { red: 246, green: 246, blue: 246 }, 0.72);
+    }
+    if (luminance >= 0.55) {
+        return mixThemeColor(color, { red: 242, green: 242, blue: 242 }, 0.5);
+    }
+
+    return color;
+}
+
+function setThemeColorVariable(name, color) {
+    // Publish each token as a normal CSS color and as an RGB triplet for rgba().
+    document.documentElement.style.setProperty(name, 'rgb(' + color.red + ', ' + color.green + ', ' + color.blue + ')');
+    document.documentElement.style.setProperty(name + '-rgb', color.red + ', ' + color.green + ', ' + color.blue);
+}
+
+function readHostSkinInfo() {
+    // Read the current CEP host theme; return null during local browser testing.
+    try {
+        if (!window.__adobe_cep__ || typeof window.__adobe_cep__.getHostEnvironment !== 'function') {
+            return null;
+        }
+
+        var hostEnvironment = JSON.parse(window.__adobe_cep__.getHostEnvironment());
+        return hostEnvironment && hostEnvironment.appSkinInfo ? hostEnvironment.appSkinInfo : null;
+    } catch (e) {
+        console.warn('[Theme] Unable to read Premiere theme:', e);
+        return null;
+    }
+}
+
+function applyPremierePanelTheme() {
+    // Convert Premiere appSkinInfo into stable panel tokens used by the CSS.
+    var skinInfo = readHostSkinInfo();
+    if (!skinInfo) {
+        return;
+    }
+
+    var panelBackground = readThemeColor(skinInfo.panelBackgroundColorSRGB) ||
+        readThemeColor(skinInfo.panelBackgroundColor) ||
+        { red: 48, green: 48, blue: 48 };
+    var highlightColor = readThemeColor(skinInfo.systemHighlightColor) || { red: 70, green: 137, blue: 255 };
+    var hostLuminance = themeLuminance(panelBackground);
+    var base = normalizePanelBackground(panelBackground);
+    var isLightTheme = hostLuminance >= 0.55;
+    var isDarkestTheme = hostLuminance <= 0.18;
+    var textPrimary = isLightTheme ? { red: 36, green: 36, blue: 36 } : { red: 236, green: 236, blue: 236 };
+    var textMuted = mixThemeColor(textPrimary, base, isLightTheme ? 0.58 : 0.44);
+    var accentSeed = mixThemeColor(highlightColor, { red: 0, green: 100, blue: 203 }, 0.72);
+    var accent = isLightTheme ? offsetThemeColor(accentSeed, -8) : offsetThemeColor(accentSeed, 10);
+
+    document.documentElement.dataset.themeVariant = isLightTheme ? 'light' : isDarkestTheme ? 'darkest' : 'dark';
+    setThemeColorVariable('--bg-primary', base);
+    setThemeColorVariable('--bg-surface', offsetThemeColor(base, isLightTheme ? -7 : isDarkestTheme ? 8 : 6));
+    setThemeColorVariable('--bg-soft', offsetThemeColor(base, isLightTheme ? -3 : isDarkestTheme ? 13 : 10));
+    setThemeColorVariable('--bg-input', offsetThemeColor(base, isLightTheme ? -14 : isDarkestTheme ? -2 : -1));
+    setThemeColorVariable('--bg-hover', offsetThemeColor(base, isLightTheme ? -17 : 20));
+    setThemeColorVariable('--text-primary', textPrimary);
+    setThemeColorVariable('--text-muted', textMuted);
+    setThemeColorVariable('--accent', accent);
+    setThemeColorVariable('--accent-hover', offsetThemeColor(accent, isLightTheme ? -10 : 18));
+    setThemeColorVariable('--accent-active', offsetThemeColor(accent, isLightTheme ? -22 : -18));
+    setThemeColorVariable('--border', offsetThemeColor(base, isLightTheme ? -28 : 16));
+    setThemeColorVariable('--border-strong', offsetThemeColor(base, isLightTheme ? -42 : 24));
+    setThemeColorVariable('--button-primary-text', themeLuminance(accent) >= 0.5 ? { red: 18, green: 18, blue: 18 } : { red: 246, green: 246, blue: 246 });
+
+    var baseFontFamily = String(skinInfo.baseFontFamily || '').trim();
+    if (baseFontFamily) {
+        document.documentElement.style.setProperty('--ui-font-family', '"' + baseFontFamily + '", "Segoe UI", "San Francisco", sans-serif');
+    }
+}
+
+function getCssVariable(name, fallback) {
+    // Read a resolved CSS custom property for JS-owned canvas colors.
+    var value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+}
+
+function refreshWaveformTheme() {
+    // Update WaveSurfer colors after Premiere theme changes when supported by the bundled version.
+    if (wavesurfer && typeof wavesurfer.setOptions === 'function') {
+        wavesurfer.setOptions({
+            waveColor: getCssVariable('--accent', '#4a90e2'),
+            progressColor: getCssVariable('--accent-active', '#d0021b'),
+            cursorColor: getCssVariable('--text-primary', '#ffffff')
+        });
+    }
+}
+
+function bindPremiereThemeListener() {
+    // Subscribe once so the panel follows Premiere light/dark changes without a reload.
+    if (!window.__adobe_cep__ || typeof window.__adobe_cep__.addEventListener !== 'function') {
+        return;
+    }
+
+    window.__adobe_cep__.addEventListener(CEP_THEME_COLOR_CHANGED_EVENT, function () {
+        applyPremierePanelTheme();
+        refreshWaveformTheme();
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+    applyPremierePanelTheme();
+    bindPremiereThemeListener();
     initWaveSurfer();
     setupEventListeners();
     checkForUpdates();
@@ -40,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
 const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
-let CURRENT_VERSION = '1.1.7';
+let CURRENT_VERSION = '1.1.8';
 
 // Open product and update links through CEP, with a browser fallback for local testing.
 function openExternalUrl(url) {
@@ -227,9 +397,9 @@ function showUpdateBanner(downloadUrl) {
 function initWaveSurfer() {
     wavesurfer = WaveSurfer.create({
         container: '#waveform',
-        waveColor: '#4a90e2',
-        progressColor: '#d0021b',
-        cursorColor: '#fff',
+        waveColor: getCssVariable('--accent', '#4a90e2'),
+        progressColor: getCssVariable('--accent-active', '#d0021b'),
+        cursorColor: getCssVariable('--text-primary', '#ffffff'),
         height: 128,
         normalize: true,
         minPxPerSec: 100, // Increased for better zoom
@@ -243,9 +413,9 @@ function initWaveSurfer() {
     // Initialize Minimap plugin for timeline-style navigation with handles
     var minimap = wavesurfer.registerPlugin(WaveSurfer.Minimap.create({
         container: '#wave-minimap',
-        waveColor: '#555',
-        progressColor: '#999',
-        cursorColor: '#fff',
+        waveColor: getCssVariable('--bg-hover', '#555555'),
+        progressColor: getCssVariable('--text-muted', '#999999'),
+        cursorColor: getCssVariable('--text-primary', '#ffffff'),
         height: 40,
         overlayColor: 'rgba(100, 100, 100, 0.4)',
         insertPosition: 'afterend'

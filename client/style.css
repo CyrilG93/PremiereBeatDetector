@@ -1,7 +1,26 @@
+html {
+    --bg-primary: #1e1e1e;
+    --bg-surface: #333333;
+    --bg-soft: #2a2a2a;
+    --bg-soft-rgb: 42, 42, 42;
+    --bg-input: #232323;
+    --bg-hover: #555555;
+    --text-primary: #efefef;
+    --text-muted: #888888;
+    --accent: #2f6ec8;
+    --accent-hover: #367bdc;
+    --accent-active: #20549c;
+    --border: #444444;
+    --border-strong: #222222;
+    --button-primary-text: #ffffff;
+    --ui-font-family: "Adobe Clean", "Segoe UI", "San Francisco", sans-serif;
+    --shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 body {
-    background-color: #1e1e1e;
-    color: #b5b5b5;
-    font-family: "Adobe Clean", "Segoe UI", "San Francisco", sans-serif;
+    background-color: var(--bg-primary);
+    color: var(--text-muted);
+    font-family: var(--ui-font-family);
     margin: 0;
     padding: 5px;
     font-size: 13px;
@@ -19,13 +38,13 @@ body {
 h1 {
     font-size: 18px;
     margin: 0 0 10px 0;
-    color: #efefef;
+    color: var(--text-primary);
 }
 
 .header {
     text-align: center;
     padding: 5px 0;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid var(--border);
     margin-bottom: 8px;
 }
 
@@ -41,7 +60,7 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 5px;
-    background: #333;
+    background: var(--bg-surface);
     padding: 10px;
     border-radius: 4px;
 }
@@ -72,7 +91,7 @@ h1 {
 #waveform-container {
     width: 100%;
     margin: 5px 0;
-    background: #1a1a1a;
+    background: var(--bg-input);
     border-radius: 4px;
     padding: 5px;
 }
@@ -84,7 +103,7 @@ h1 {
 #wave-minimap {
     width: 100%;
     margin-top: 8px;
-    border: 1px solid #444;
+    border: 1px solid var(--border);
     border-radius: 3px;
     cursor: pointer;
 }
@@ -98,15 +117,15 @@ h1 {
 .waveform-controls button {
     padding: 5px 14px;
     font-size: 12px;
-    background: #4a90e2;
-    color: white;
+    background: var(--accent);
+    color: var(--button-primary-text);
     border: none;
     border-radius: 3px;
     cursor: pointer;
 }
 
 .waveform-controls button:hover {
-    background: #357abd;
+    background: var(--accent-hover);
 }
 
 /* Minimap overlay (the draggable viewport) */
@@ -117,7 +136,7 @@ h1 {
 .settings-section {
     margin-bottom: 6px;
     padding: 5px 6px;
-    background: #2a2a2a;
+    background: var(--bg-soft);
     border-radius: 4px;
 }
 
@@ -140,17 +159,17 @@ input[type="range"] {
 
 input[type="number"] {
     width: 60px;
-    background: #232323;
-    border: 1px solid #444;
-    color: #efefef;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
     padding: 4px;
 }
 
 /* Button Styles mimicking Adobe Topcoat */
 button {
-    background-color: #444;
-    border: 1px solid #222;
-    color: #efefef;
+    background-color: var(--bg-soft);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
     padding: 6px 12px;
     border-radius: 3px;
     cursor: pointer;
@@ -159,7 +178,7 @@ button {
 }
 
 button:hover {
-    background-color: #555;
+    background-color: var(--bg-hover);
 }
 
 button:disabled {
@@ -177,22 +196,24 @@ button:disabled {
 }
 
 .button-group button.active {
-    background-color: #2f6ec8;
-    border-color: #20549c;
+    background-color: var(--accent);
+    border-color: var(--accent-active);
+    color: var(--button-primary-text);
 }
 
 .topcoat-button--large--cta {
-    background-color: #2f6ec8;
-    border-color: #20549c;
+    background-color: var(--accent);
+    border-color: var(--accent-active);
+    color: var(--button-primary-text);
     font-weight: bold;
 }
 
 .topcoat-button--large--cta:hover {
-    background-color: #367bdc;
+    background-color: var(--accent-hover);
 }
 
 #status-msg {
-    color: #888;
+    color: var(--text-muted);
     font-style: italic;
     text-align: center;
     margin-top: 10px;
@@ -208,7 +229,7 @@ button:disabled {
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow);
     animation: slideDown 0.3s ease-out;
     margin-bottom: 5px;
     border-radius: 4px;
@@ -232,9 +253,9 @@ button:disabled {
 
 /* Version Badge */
 .version-badge {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid #444;
-    color: #888;
+    background: rgba(var(--bg-soft-rgb), 0.9);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
     font-size: 11px;
     padding: 2px 6px;
     border-radius: 4px;

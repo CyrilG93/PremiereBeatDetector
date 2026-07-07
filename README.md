@@ -19,6 +19,7 @@ A powerful Adobe Premiere Pro extension for automatic beat detection and marker 
 - **Audio Playback** - Preview your audio with pause/resume functionality
 - **Subdivision Support** - Create markers at full beats, half notes (/2), or quarter notes (/4)
 - **Flexible Marker Placement** - Choose between clip markers or sequence markers
+- **Premiere Theme Support** - The panel follows Premiere Pro's light and dark interface colors
 
 ---
 
@@ -189,7 +190,6 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 
 This extension is provided as-is for use with Adobe Premiere Pro.
 
-**Version**: 1.1.7
+**Version**: 1.1.8
 
 ---
-

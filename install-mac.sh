@@ -1,6 +1,6 @@
 #!/bin/bash
 # Beat Detector - macOS Installation Script
-# Version 1.1.7
+# Version 1.1.8
 
 echo ""
 echo "========================================"
