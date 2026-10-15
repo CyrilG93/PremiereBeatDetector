@@ -198,3 +198,21 @@ This extension is provided as-is for use with Adobe Premiere Pro.
 - The panel now follows Premiere Pro's light and dark themes, and its version badge opens the Beat Detector page.
 - Improved audio loading and automatic analysis reliability in CEP hosts, including Premiere Pro 2024 on Windows.
 - Simplified installation on macOS and Windows: both installers work in the current user account without administrator rights and provide clearer feedback.
+
+### 1.1.3 — 2026-02-06
+
+- Added an automatic update notification with a direct download link and a localized update banner.
+- Fixed macOS installer permission issues.
+
+### 1.1.2 — 2026-01-20
+
+- Added `BeatDetector_` prefixes to ExtendScript functions to prevent conflicts with other Premiere extensions.
+
+### 1.1.1 — 2026-01-14
+
+- Improved the bilingual README and added macOS and Windows installer scripts.
+- Corrected the Windows debug-mode registry instructions.
+
+### 1.1.0 — 2025-12-19
+
+- First public release of Premiere Pro Beat Detector.
