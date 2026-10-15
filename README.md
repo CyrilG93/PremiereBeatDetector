@@ -186,6 +186,6 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 
 This extension is provided as-is for use with Adobe Premiere Pro.
 
-**Version**: 1.1.10
+**Version**: 1.1.11
 
 ---

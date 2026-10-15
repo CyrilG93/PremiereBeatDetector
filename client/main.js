@@ -4,7 +4,8 @@ var wsRegions;
 var audioBuffer = null;
 var allDetectedBeats = []; // Stores all raw detected beats
 var filteredBeats = []; // Stores beats after subdivision
-var beatRegions = []; // Keeps WaveSurfer regions so slider updates do not blank the waveform.
+var beatRegions = []; // Keeps green WaveSurfer regions so slider updates do not blank the waveform.
+var firstBeatRegion = null; // Keeps the red first-beat region independent from the green beat list.
 var subdivision = 1; // 1, 2, or 4
 var clipStartOffset = 0; // Start time of the clip on the timeline
 var autoAnalyzeTimer = null; // Debounce automatic analysis across decode/ready events
@@ -212,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
 const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
-let CURRENT_VERSION = '1.1.10';
+let CURRENT_VERSION = '1.1.11';
 
 // Open product and update links through CEP, with a browser fallback for local testing.
 function openExternalUrl(url) {
@@ -635,6 +636,7 @@ function loadAudio(url, name) {
     allDetectedBeats = [];
     filteredBeats = [];
     beatRegions = [];
+    firstBeatRegion = null;
     audioBuffer = null;
     if (autoAnalyzeTimer) {
         clearTimeout(autoAnalyzeTimer);
@@ -1176,27 +1178,46 @@ function updateFilteredBeats() {
     document.getElementById('status-msg').textContent =
         "Detected " + filteredBeats.length + " beats (/" + subdivision + ")";
 
-    // Update existing regions in place so the waveform never briefly loses all beat bars.
+    // Update the first beat separately so it never exchanges its red region with a green neighbor.
+    var firstBeatTime = allDetectedBeats[firstBeatIndex];
+    var firstBeatOptions = {
+        start: firstBeatTime,
+        end: firstBeatTime + 0.05,
+        color: 'rgba(255, 0, 0, 0.3)',
+        drag: false,
+        resize: false
+    };
+    if (firstBeatRegion) {
+        firstBeatRegion.setOptions(firstBeatOptions);
+    } else if (wsRegions) {
+        firstBeatRegion = wsRegions.addRegion(firstBeatOptions);
+    }
+
+    // Update existing green regions in place so the waveform never briefly loses all beat bars.
+    var greenBeatIndex = 0;
     for (var k = 0; k < filteredBeats.length; k++) {
         var beatTime = filteredBeats[k];
-        var isFirstBeat = beatTime === allDetectedBeats[firstBeatIndex]; // Always retain the anchored first beat's red bar.
+        if (beatTime === firstBeatTime) {
+            continue;
+        }
         var regionOptions = {
             start: beatTime,
             end: beatTime + 0.05,
-            color: isFirstBeat ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 0, 0.3)', // Red for first, green for others
+            color: 'rgba(0, 255, 0, 0.3)',
             drag: false,
             resize: false
         };
 
-        if (beatRegions[k]) {
-            beatRegions[k].setOptions(regionOptions);
+        if (beatRegions[greenBeatIndex]) {
+            beatRegions[greenBeatIndex].setOptions(regionOptions);
         } else if (wsRegions) {
-            beatRegions[k] = wsRegions.addRegion(regionOptions);
+            beatRegions[greenBeatIndex] = wsRegions.addRegion(regionOptions);
         }
+        greenBeatIndex++;
     }
 
     // Remove only regions no longer needed after an audio duration or subdivision change.
-    while (beatRegions.length > filteredBeats.length) {
+    while (beatRegions.length > greenBeatIndex) {
         beatRegions.pop().remove();
     }
     document.getElementById('btn-create-markers').disabled = false;
