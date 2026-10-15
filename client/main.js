@@ -4,9 +4,11 @@ var wsRegions;
 var audioBuffer = null;
 var allDetectedBeats = []; // Stores all raw detected beats
 var filteredBeats = []; // Stores beats after subdivision
+var beatRegions = []; // Keeps WaveSurfer regions so slider updates do not blank the waveform.
 var subdivision = 1; // 1, 2, or 4
 var clipStartOffset = 0; // Start time of the clip on the timeline
 var autoAnalyzeTimer = null; // Debounce automatic analysis across decode/ready events
+var manualPreviewFrame = null; // Coalesces rapid manual-slider input into one visual update per frame.
 
 function toWaveSurferUrl(pathOrUrl) {
     // Keep already valid URLs untouched (http, https, file, blob, etc.).
@@ -210,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
 const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
-let CURRENT_VERSION = '1.1.9';
+let CURRENT_VERSION = '1.1.10';
 
 // Open product and update links through CEP, with a browser fallback for local testing.
 function openExternalUrl(url) {
@@ -632,6 +634,7 @@ function loadAudio(url, name) {
     // Reset state
     allDetectedBeats = [];
     filteredBeats = [];
+    beatRegions = [];
     audioBuffer = null;
     if (autoAnalyzeTimer) {
         clearTimeout(autoAnalyzeTimer);
@@ -653,7 +656,8 @@ function analyzeBeats() {
 
     var mode = window.detectionMode || 'manual';
 
-    setTimeout(function () {
+    // Keep the inexpensive manual grid synchronous so its preview follows the slider directly.
+    function runAnalysis() {
         try {
             if (mode === 'manual') {
                 // Manual grid mode
@@ -681,7 +685,14 @@ function analyzeBeats() {
             console.error(e);
             document.getElementById('status-msg').textContent = "Analysis failed: " + e.message;
         }
-    }, 50);
+    }
+
+    if (mode === 'manual') {
+        runAnalysis();
+    } else {
+        // Let the panel repaint its status before the heavier automatic analysis starts.
+        setTimeout(runAnalysis, 50);
+    }
 }
 
 // Detect first beat and estimate tempo
@@ -778,16 +789,28 @@ function generateBeatGrid(firstBeat, bpm, duration) {
     return beats;
 }
 
+function scheduleManualGridPreview() {
+    // Limit rapid range-input events to one grid refresh per painted frame.
+    if (manualPreviewFrame !== null) {
+        return;
+    }
+
+    manualPreviewFrame = requestAnimationFrame(function () {
+        manualPreviewFrame = null;
+        analyzeBeats();
+    });
+}
+
 // Live preview for manual mode sliders
 document.getElementById('bpm').addEventListener('input', function () {
     if (audioBuffer && window.detectionMode === 'manual') {
-        analyzeBeats();
+        scheduleManualGridPreview();
     }
 });
 
 document.getElementById('first-beat').addEventListener('input', function () {
     if (audioBuffer && window.detectionMode === 'manual') {
-        analyzeBeats();
+        scheduleManualGridPreview();
     }
 });
 
@@ -1129,43 +1152,52 @@ function refineTempoComb(onsets, initialTempo, hopTime) {
 function updateFilteredBeats() {
     if (allDetectedBeats.length === 0) return;
 
+    // Find the generated beat that represents the user's first-beat offset.
+    var firstBeatOffset = parseFloat(document.getElementById('first-beat').value);
+    var firstBeatIndex = 0;
+    var smallestOffsetDifference = Infinity;
+    for (var i = 0; i < allDetectedBeats.length; i++) {
+        var offsetDifference = Math.abs(allDetectedBeats[i] - firstBeatOffset);
+        if (offsetDifference < smallestOffsetDifference) {
+            smallestOffsetDifference = offsetDifference;
+            firstBeatIndex = i;
+        }
+    }
+
     // Apply subdivision
     filteredBeats = [];
-    for (var i = 0; i < allDetectedBeats.length; i++) {
-        if (subdivision === 1) {
-            filteredBeats.push(allDetectedBeats[i]);
-        } else if (subdivision === 2) {
-            if (i % 2 === 0) filteredBeats.push(allDetectedBeats[i]);
-        } else if (subdivision === 4) {
-            if (i % 4 === 0) filteredBeats.push(allDetectedBeats[i]);
+    for (var j = 0; j < allDetectedBeats.length; j++) {
+        // Anchor /2 and /4 to the first beat, rather than to the clip's changing leading beat.
+        if ((j - firstBeatIndex) % subdivision === 0) {
+            filteredBeats.push(allDetectedBeats[j]);
         }
     }
 
     document.getElementById('status-msg').textContent =
         "Detected " + filteredBeats.length + " beats (/" + subdivision + ")";
 
-    // Clear existing regions
-    if (wsRegions) {
-        wsRegions.clearRegions();
-    }
-
-    // Get first beat offset to determine which beat is the "first"
-    var firstBeatOffset = parseFloat(document.getElementById('first-beat').value);
-
-    // Add new regions for each beat
-    for (var i = 0; i < filteredBeats.length; i++) {
-        var beatTime = filteredBeats[i];
-
-        // Check if this is the first beat (the one at the offset position)
-        var isFirstBeat = Math.abs(beatTime - firstBeatOffset) < 0.01; // Within 10ms tolerance
-
-        wsRegions.addRegion({
+    // Update existing regions in place so the waveform never briefly loses all beat bars.
+    for (var k = 0; k < filteredBeats.length; k++) {
+        var beatTime = filteredBeats[k];
+        var isFirstBeat = beatTime === allDetectedBeats[firstBeatIndex]; // Always retain the anchored first beat's red bar.
+        var regionOptions = {
             start: beatTime,
             end: beatTime + 0.05,
             color: isFirstBeat ? 'rgba(255, 0, 0, 0.3)' : 'rgba(0, 255, 0, 0.3)', // Red for first, green for others
             drag: false,
             resize: false
-        });
+        };
+
+        if (beatRegions[k]) {
+            beatRegions[k].setOptions(regionOptions);
+        } else if (wsRegions) {
+            beatRegions[k] = wsRegions.addRegion(regionOptions);
+        }
+    }
+
+    // Remove only regions no longer needed after an audio duration or subdivision change.
+    while (beatRegions.length > filteredBeats.length) {
+        beatRegions.pop().remove();
     }
     document.getElementById('btn-create-markers').disabled = false;
 }
