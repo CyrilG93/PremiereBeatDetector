@@ -186,6 +186,15 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 
 This extension is provided as-is for use with Adobe Premiere Pro.
 
-**Version**: 1.1.11
+**Version**: 1.2.0
 
 ---
+
+## Changelog
+
+### 1.2.0 — 2026-10-15
+
+- The Manual Grid preview is now stable while adjusting BPM or the first beat: `/2` and `/4` always keep the selected first beat visible, with smoother marker updates.
+- The panel now follows Premiere Pro's light and dark themes, and its version badge opens the Beat Detector page.
+- Improved audio loading and automatic analysis reliability in CEP hosts, including Premiere Pro 2024 on Windows.
+- Simplified installation on macOS and Windows: both installers work in the current user account without administrator rights and provide clearer feedback.
