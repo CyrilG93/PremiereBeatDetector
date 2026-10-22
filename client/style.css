@@ -178,13 +178,73 @@ input[type="number"] {
     font-size: 12px;
 }
 
-.marker-color-select {
+.marker-color-picker {
     min-width: 82px;
+    position: relative;
+}
+
+.marker-color-trigger {
+    align-items: center;
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: 3px;
     color: var(--text-primary);
-    padding: 3px;
+    display: flex;
+    justify-content: space-between;
+    min-width: 82px;
+    padding: 3px 5px;
+    text-align: left;
+}
+
+.marker-color-trigger:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+.marker-color-arrow {
+    font-size: 10px;
+    margin-left: 8px;
+}
+
+/* Use a panel-owned, scrollable popover because CEP can clip native select menus. */
+.marker-color-menu {
+    background: var(--bg-input);
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    box-shadow: var(--shadow);
+    display: none;
+    max-height: 164px;
+    min-width: 96px;
+    overflow-y: auto;
+    position: fixed;
+    z-index: 1000;
+}
+
+.marker-color-picker.is-open .marker-color-menu {
+    display: block;
+}
+
+.marker-color-option {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--text-primary);
+    display: block;
+    padding: 4px 8px;
+    text-align: left;
+    width: 100%;
+}
+
+.marker-color-option:hover,
+.marker-color-option:focus,
+.marker-color-option.is-selected {
+    background: var(--accent);
+    color: var(--button-primary-text);
+    outline: none;
+}
+
+.marker-color-picker.is-open .marker-color-arrow {
+    transform: rotate(180deg);
 }
 
 .marker-color-help {

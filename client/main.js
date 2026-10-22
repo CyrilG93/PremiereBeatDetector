@@ -14,6 +14,7 @@ var manualPreviewFrame = null; // Coalesces rapid manual-slider input into one v
 var markerColorsEnabled = false; // Uses one configurable color until the user enables the repeating beat palette.
 var singleMarkerColorIndex = 0; // Green is Premiere's default marker color.
 var markerColorCycle = [0, 1, 2, 3]; // Defaults to Green, Red, Purple, and Orange for a four-beat cycle.
+var PREMIERE_MARKER_COLORS = ['Green', 'Red', 'Purple', 'Orange', 'Yellow', 'White', 'Blue', 'Cyan']; // Matches Premiere's marker palette indexes.
 var markerCreationJob = null; // Tracks the asynchronous Premiere marker job so the panel can stop between batches.
 var MARKER_CREATION_BATCH_SIZE = 25; // Keeps each ExtendScript call short enough for the Stop button to stay responsive.
 
@@ -219,7 +220,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
 const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
-let CURRENT_VERSION = '1.2.2';
+let CURRENT_VERSION = '1.2.3';
 
 // Open product and update links through CEP, with a browser fallback for local testing.
 function openExternalUrl(url) {
@@ -613,16 +614,17 @@ function setupEventListeners() {
         updateMarkerColorControls();
         updateFilteredBeats();
     });
-    document.getElementById('marker-color-single').addEventListener('change', function (e) {
-        singleMarkerColorIndex = getPremiereMarkerColorIndex(e.target.value, 0);
+    setupMarkerColorPicker('marker-color-single', function (colorIndex) {
+        singleMarkerColorIndex = colorIndex;
         updateFilteredBeats();
     });
     for (var colorSlot = 0; colorSlot < markerColorCycle.length; colorSlot++) {
-        document.getElementById('marker-color-cycle-' + colorSlot).addEventListener('change', function (e) {
-            var slot = parseInt(e.target.id.replace('marker-color-cycle-', ''), 10);
-            markerColorCycle[slot] = getPremiereMarkerColorIndex(e.target.value, 0);
-            updateFilteredBeats();
-        });
+        (function (slot) {
+            setupMarkerColorPicker('marker-color-cycle-' + slot, function (colorIndex) {
+                markerColorCycle[slot] = colorIndex;
+                updateFilteredBeats();
+            });
+        }(colorSlot));
     }
     updateMarkerColorControls();
 
@@ -662,6 +664,127 @@ function getPremiereMarkerColorIndex(value, fallback) {
         return fallback;
     }
     return colorIndex;
+}
+
+function closeMarkerColorPickers(exceptPicker) {
+    // Close any other open palette before showing the requested popover.
+    var pickers = document.querySelectorAll('.marker-color-picker.is-open');
+    for (var i = 0; i < pickers.length; i++) {
+        if (pickers[i] !== exceptPicker) {
+            pickers[i].classList.remove('is-open');
+        }
+    }
+}
+
+function positionMarkerColorMenu(picker) {
+    // Keep the fixed popover inside CEP's visible viewport, preferring space above when needed.
+    var trigger = picker.querySelector('.marker-color-trigger');
+    var menu = picker.querySelector('.marker-color-menu');
+    var triggerRect = trigger.getBoundingClientRect();
+    var documentHeight = document.documentElement.clientHeight || Infinity;
+    var windowHeight = window.innerHeight || Infinity;
+    var viewportHeight = Math.min(documentHeight, windowHeight);
+    var availableHeight = Math.max(80, viewportHeight - 12);
+    menu.style.left = Math.max(4, triggerRect.left) + 'px';
+    menu.style.maxHeight = Math.min(164, availableHeight) + 'px';
+    menu.style.visibility = 'hidden';
+
+    var menuHeight = menu.offsetHeight;
+    var top = triggerRect.bottom + 2;
+    if (top + menuHeight > viewportHeight && triggerRect.top - menuHeight - 2 >= 4) {
+        top = triggerRect.top - menuHeight - 2;
+    } else {
+        top = Math.max(4, Math.min(top, viewportHeight - menuHeight - 4));
+    }
+    menu.style.top = top + 'px';
+    menu.style.visibility = 'visible';
+}
+
+function setupMarkerColorPicker(pickerId, onChange) {
+    // Build an opaque HTML palette so CEP never delegates its dropdown to a clipped native select control.
+    var picker = document.getElementById(pickerId);
+    var selectedColorIndex = getPremiereMarkerColorIndex(picker.getAttribute('data-color-index'), 0);
+    var trigger = document.createElement('button');
+    var label = document.createElement('span');
+    var arrow = document.createElement('span');
+    var menu = document.createElement('div');
+
+    trigger.type = 'button';
+    trigger.className = 'marker-color-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+    label.className = 'marker-color-label';
+    arrow.className = 'marker-color-arrow';
+    arrow.textContent = '▾';
+    menu.className = 'marker-color-menu';
+    menu.setAttribute('role', 'listbox');
+    trigger.appendChild(label);
+    trigger.appendChild(arrow);
+    picker.appendChild(trigger);
+    picker.appendChild(menu);
+
+    function setSelectedColor(colorIndex) {
+        // Synchronize the displayed name, data value, and selected menu item for this palette.
+        var normalizedColorIndex = getPremiereMarkerColorIndex(colorIndex, 0);
+        picker.setAttribute('data-color-index', normalizedColorIndex);
+        label.textContent = PREMIERE_MARKER_COLORS[normalizedColorIndex];
+        var options = menu.querySelectorAll('.marker-color-option');
+        for (var optionIndex = 0; optionIndex < options.length; optionIndex++) {
+            options[optionIndex].classList.toggle('is-selected', optionIndex === normalizedColorIndex);
+        }
+        return normalizedColorIndex;
+    }
+
+    for (var colorIndex = 0; colorIndex < PREMIERE_MARKER_COLORS.length; colorIndex++) {
+        var option = document.createElement('button');
+        option.type = 'button';
+        option.className = 'marker-color-option';
+        option.setAttribute('role', 'option');
+        option.setAttribute('data-color-index', colorIndex);
+        option.textContent = PREMIERE_MARKER_COLORS[colorIndex];
+        menu.appendChild(option);
+    }
+    setSelectedColor(selectedColorIndex);
+
+    trigger.addEventListener('click', function () {
+        // Toggle the palette and calculate its position only after CSS has made it measurable.
+        var willOpen = !picker.classList.contains('is-open');
+        closeMarkerColorPickers(picker);
+        picker.classList.toggle('is-open', willOpen);
+        trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        if (willOpen) {
+            positionMarkerColorMenu(picker);
+        }
+    });
+
+    menu.addEventListener('click', function (event) {
+        // Select a palette entry and immediately close the custom popover.
+        var target = event.target;
+        var colorIndex = target && target.getAttribute ? target.getAttribute('data-color-index') : null;
+        if (colorIndex === null) {
+            return;
+        }
+        picker.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        onChange(setSelectedColor(colorIndex));
+    });
+
+    document.addEventListener('click', function (event) {
+        // Dismiss the palette when the user continues elsewhere in the panel.
+        if (!picker.contains(event.target)) {
+            picker.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    document.addEventListener('keydown', function (event) {
+        // Let Escape close an open palette without changing its current color.
+        if (event.key === 'Escape' && picker.classList.contains('is-open')) {
+            picker.classList.remove('is-open');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.focus();
+        }
+    });
 }
 
 function getMarkerColorCycleLength() {
