@@ -15,6 +15,7 @@ var markerColorsEnabled = false; // Uses one configurable color until the user e
 var singleMarkerColorIndex = 0; // Green is Premiere's default marker color.
 var markerColorCycle = [0, 1, 2, 3]; // Defaults to Green, Red, Purple, and Orange for a four-beat cycle.
 var PREMIERE_MARKER_COLORS = ['Green', 'Red', 'Purple', 'Orange', 'Yellow', 'White', 'Blue', 'Cyan']; // Matches Premiere's marker palette indexes.
+var MARKER_COLOR_SETTINGS_STORAGE_KEY = 'com.antigravity.beatdetector.markerColors'; // Shares color preferences across Premiere projects for this CEP extension.
 var markerCreationJob = null; // Tracks the asynchronous Premiere marker job so the panel can stop between batches.
 var MARKER_CREATION_BATCH_SIZE = 25; // Keeps each ExtendScript call short enough for the Stop button to stay responsive.
 
@@ -220,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
 const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
-let CURRENT_VERSION = '1.2.3';
+let CURRENT_VERSION = '1.2.4';
 
 // Open product and update links through CEP, with a browser fallback for local testing.
 function openExternalUrl(url) {
@@ -512,6 +513,9 @@ function runAutoAnalysis(sourceEvent) {
 function setupEventListeners() {
     var detectionMode = 'manual'; // 'manual' or 'auto'
 
+    // Restore the user's last color choices before building the custom palette controls.
+    restoreMarkerColorSettings();
+
     // Mode switching
     document.getElementById('btn-mode-manual').addEventListener('click', function () {
         detectionMode = 'manual';
@@ -609,19 +613,25 @@ function setupEventListeners() {
     document.getElementById('btn-sub-4').addEventListener('click', function () { setSubdivision(4, this); });
 
     // Let users keep one color or assign a repeating palette that follows the selected subdivision.
+    document.getElementById('marker-colors-enabled').checked = markerColorsEnabled;
     document.getElementById('marker-colors-enabled').addEventListener('change', function (e) {
         markerColorsEnabled = e.target.checked;
+        saveMarkerColorSettings();
         updateMarkerColorControls();
         updateFilteredBeats();
     });
+    document.getElementById('marker-color-single').setAttribute('data-color-index', singleMarkerColorIndex);
     setupMarkerColorPicker('marker-color-single', function (colorIndex) {
         singleMarkerColorIndex = colorIndex;
+        saveMarkerColorSettings();
         updateFilteredBeats();
     });
     for (var colorSlot = 0; colorSlot < markerColorCycle.length; colorSlot++) {
         (function (slot) {
+            document.getElementById('marker-color-cycle-' + slot).setAttribute('data-color-index', markerColorCycle[slot]);
             setupMarkerColorPicker('marker-color-cycle-' + slot, function (colorIndex) {
                 markerColorCycle[slot] = colorIndex;
+                saveMarkerColorSettings();
                 updateFilteredBeats();
             });
         }(colorSlot));
@@ -664,6 +674,39 @@ function getPremiereMarkerColorIndex(value, fallback) {
         return fallback;
     }
     return colorIndex;
+}
+
+function restoreMarkerColorSettings() {
+    // Read saved colors from CEP's local storage, while keeping defaults if storage is unavailable or malformed.
+    try {
+        var savedSettings = window.localStorage.getItem(MARKER_COLOR_SETTINGS_STORAGE_KEY);
+        if (!savedSettings) {
+            return;
+        }
+        var parsedSettings = JSON.parse(savedSettings);
+        markerColorsEnabled = parsedSettings.enabled === true;
+        singleMarkerColorIndex = getPremiereMarkerColorIndex(parsedSettings.singleColorIndex, 0);
+        if (Object.prototype.toString.call(parsedSettings.colorCycle) === '[object Array]') {
+            for (var colorSlot = 0; colorSlot < markerColorCycle.length; colorSlot++) {
+                markerColorCycle[colorSlot] = getPremiereMarkerColorIndex(parsedSettings.colorCycle[colorSlot], markerColorCycle[colorSlot]);
+            }
+        }
+    } catch (error) {
+        console.warn('Unable to restore marker color settings:', error);
+    }
+}
+
+function saveMarkerColorSettings() {
+    // Persist only the color UI preferences so they remain available after opening another Premiere project.
+    try {
+        window.localStorage.setItem(MARKER_COLOR_SETTINGS_STORAGE_KEY, JSON.stringify({
+            enabled: markerColorsEnabled,
+            singleColorIndex: singleMarkerColorIndex,
+            colorCycle: markerColorCycle
+        }));
+    } catch (error) {
+        console.warn('Unable to save marker color settings:', error);
+    }
 }
 
 function closeMarkerColorPickers(exceptPicker) {
