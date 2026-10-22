@@ -18,6 +18,7 @@ A powerful Adobe Premiere Pro extension for automatic beat detection and marker 
 - **Precise Control** - Manual BPM adjustment and first beat offset with 1ms precision
 - **Audio Playback** - Preview your audio with pause/resume functionality
 - **Subdivision Support** - Create markers at full beats, half notes (/2), or quarter notes (/4)
+- **Configurable Marker Colors** - Keep one marker color or repeat Premiere's marker colors by beat position
 - **Flexible Marker Placement** - Choose between clip markers or sequence markers
 - **Premiere Theme Support** - The panel follows Premiere Pro's light and dark interface colors
 
@@ -125,6 +126,10 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
      - **Clip Markers (Source)**: Markers on the source clip
      - **Sequence Markers (Offset)**: Markers on the timeline
    - Click "Create Markers" to add beat markers to Premiere Pro
+
+6. **Marker Colors**
+   - Leave "Different colors by beat" off to use one selected Premiere marker color
+   - Turn it on to choose a repeating color for each beat position: four colors at `/1`, two at `/2`, and one at `/4`
 
 ### Detection Modes
 

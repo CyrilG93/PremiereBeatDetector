@@ -4,12 +4,16 @@ var wsRegions;
 var audioBuffer = null;
 var allDetectedBeats = []; // Stores all raw detected beats
 var filteredBeats = []; // Stores beats after subdivision
+var filteredBeatColorIndexes = []; // Keeps each generated marker's Premiere color aligned with its beat.
 var beatRegions = []; // Keeps green WaveSurfer regions so slider updates do not blank the waveform.
 var firstBeatRegion = null; // Keeps the red first-beat region independent from the green beat list.
 var subdivision = 1; // 1, 2, or 4
 var clipStartOffset = 0; // Start time of the clip on the timeline
 var autoAnalyzeTimer = null; // Debounce automatic analysis across decode/ready events
 var manualPreviewFrame = null; // Coalesces rapid manual-slider input into one visual update per frame.
+var markerColorsEnabled = false; // Uses one configurable color until the user enables the repeating beat palette.
+var singleMarkerColorIndex = 0; // Green is Premiere's default marker color.
+var markerColorCycle = [0, 1, 2, 3]; // Defaults to Green, Red, Purple, and Orange for a four-beat cycle.
 
 function toWaveSurferUrl(pathOrUrl) {
     // Keep already valid URLs untouched (http, https, file, blob, etc.).
@@ -213,7 +217,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
 const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
-let CURRENT_VERSION = '1.2.0';
+let CURRENT_VERSION = '1.2.1';
 
 // Open product and update links through CEP, with a browser fallback for local testing.
 function openExternalUrl(url) {
@@ -601,6 +605,25 @@ function setupEventListeners() {
     document.getElementById('btn-sub-2').addEventListener('click', function () { setSubdivision(2, this); });
     document.getElementById('btn-sub-4').addEventListener('click', function () { setSubdivision(4, this); });
 
+    // Let users keep one color or assign a repeating palette that follows the selected subdivision.
+    document.getElementById('marker-colors-enabled').addEventListener('change', function (e) {
+        markerColorsEnabled = e.target.checked;
+        updateMarkerColorControls();
+        updateFilteredBeats();
+    });
+    document.getElementById('marker-color-single').addEventListener('change', function (e) {
+        singleMarkerColorIndex = getPremiereMarkerColorIndex(e.target.value, 0);
+        updateFilteredBeats();
+    });
+    for (var colorSlot = 0; colorSlot < markerColorCycle.length; colorSlot++) {
+        document.getElementById('marker-color-cycle-' + colorSlot).addEventListener('change', function (e) {
+            var slot = parseInt(e.target.id.replace('marker-color-cycle-', ''), 10);
+            markerColorCycle[slot] = getPremiereMarkerColorIndex(e.target.value, 0);
+            updateFilteredBeats();
+        });
+    }
+    updateMarkerColorControls();
+
     // Click track
     document.getElementById('btn-play-click').addEventListener('click', playClickTrack);
 
@@ -625,7 +648,56 @@ function setSubdivision(val, btn) {
     document.querySelectorAll('.button-group button').forEach(function (b) { b.classList.remove('active'); });
     btn.classList.add('active');
 
+    // Recalculate the visible color slots before regenerating the marker color list.
+    updateMarkerColorControls();
     updateFilteredBeats();
+}
+
+function getPremiereMarkerColorIndex(value, fallback) {
+    // Accept only Premiere's documented marker palette indexes (0 Green through 7 Cyan).
+    var colorIndex = parseInt(value, 10);
+    if (isNaN(colorIndex) || colorIndex < 0 || colorIndex > 7) {
+        return fallback;
+    }
+    return colorIndex;
+}
+
+function getMarkerColorCycleLength() {
+    // A four-beat musical cycle contains four colors at /1, two at /2, and one at /4.
+    return Math.max(1, Math.round(4 / subdivision));
+}
+
+function getMarkerColorIndexForBeat(beatIndex, firstBeatIndex) {
+    // Keep a single chosen color when color coding is off, regardless of the generated beat position.
+    if (!markerColorsEnabled) {
+        return singleMarkerColorIndex;
+    }
+
+    // Convert the original beat index into a non-negative position in the selected marker cycle.
+    var selectedBeatPosition = Math.round((beatIndex - firstBeatIndex) / subdivision);
+    var cycleLength = getMarkerColorCycleLength();
+    var cyclePosition = ((selectedBeatPosition % cycleLength) + cycleLength) % cycleLength;
+    return markerColorCycle[cyclePosition];
+}
+
+function updateMarkerColorControls() {
+    // Show only the controls that matter for the active one-color or repeating-color mode.
+    var singleColorControl = document.getElementById('single-marker-color-control');
+    var cycleControls = document.getElementById('marker-color-cycle-controls');
+    var cycleLength = getMarkerColorCycleLength();
+    singleColorControl.style.display = markerColorsEnabled ? 'none' : 'flex';
+    cycleControls.style.display = markerColorsEnabled ? 'block' : 'none';
+
+    if (!markerColorsEnabled) {
+        return;
+    }
+
+    document.getElementById('marker-color-help').textContent =
+        'Repeats every four original beats: ' + cycleLength + (cycleLength === 1 ? ' color' : ' colors') + ' at /' + subdivision + '.';
+    for (var slot = 0; slot < markerColorCycle.length; slot++) {
+        var colorControl = document.querySelector('[data-color-slot="' + slot + '"]');
+        colorControl.style.display = slot < cycleLength ? 'flex' : 'none';
+    }
 }
 
 function loadAudio(url, name) {
@@ -635,6 +707,7 @@ function loadAudio(url, name) {
     // Reset state
     allDetectedBeats = [];
     filteredBeats = [];
+    filteredBeatColorIndexes = [];
     beatRegions = [];
     firstBeatRegion = null;
     audioBuffer = null;
@@ -1166,12 +1239,14 @@ function updateFilteredBeats() {
         }
     }
 
-    // Apply subdivision
+    // Apply subdivision and retain the matching Premiere color for every selected beat.
     filteredBeats = [];
+    filteredBeatColorIndexes = [];
     for (var j = 0; j < allDetectedBeats.length; j++) {
         // Anchor /2 and /4 to the first beat, rather than to the clip's changing leading beat.
         if ((j - firstBeatIndex) % subdivision === 0) {
             filteredBeats.push(allDetectedBeats[j]);
+            filteredBeatColorIndexes.push(getMarkerColorIndexForBeat(j, firstBeatIndex));
         }
     }
 
@@ -1334,6 +1409,7 @@ function createMarkersInPremiere() {
 
     // Convert beats array to string for passing to ExtendScript
     var beatsJson = JSON.stringify(filteredBeats);
+    var markerColorsJson = JSON.stringify(filteredBeatColorIndexes);
     var markerType = document.getElementById('marker-type').value;
     var offset = clipStartOffset; // Use the captured start time
 
@@ -1343,7 +1419,8 @@ function createMarkersInPremiere() {
     debugInfo += "- First 5 beats: " + filteredBeats.slice(0, 5).join(", ") + "s\n";
     debugInfo += "- Last 5 beats: " + filteredBeats.slice(-5).join(", ") + "s\n";
     debugInfo += "- Marker type: " + markerType + "\n";
-    debugInfo += "- Offset: " + offset + "s";
+    debugInfo += "- Offset: " + offset + "s\n";
+    debugInfo += "- Marker colors: " + markerColorsJson;
 
     console.log(debugInfo);
     console.log("Beats JSON:", beatsJson.substring(0, 200));
@@ -1351,7 +1428,8 @@ function createMarkersInPremiere() {
     // Properly escape the JSON string for ExtendScript
     // We need to escape quotes and pass it as a string literal
     var escapedJson = beatsJson.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    var script = 'BeatDetector_addMarkers("' + escapedJson + '", ' + offset + ', "' + markerType + '")';
+    var escapedMarkerColorsJson = markerColorsJson.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    var script = 'BeatDetector_addMarkers("' + escapedJson + '", ' + offset + ', "' + markerType + '", "' + escapedMarkerColorsJson + '")';
 
     console.log("ExtendScript call:", script.substring(0, 200));
 

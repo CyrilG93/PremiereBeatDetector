@@ -13,7 +13,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Beat Detector<span id="versionInfo" class="version-badge" role="button" tabindex="0" title="Open Beat Detector page" aria-label="Open Beat Detector page">v1.2.0</span></h1>
+            <h1>Beat Detector<span id="versionInfo" class="version-badge" role="button" tabindex="0" title="Open Beat Detector page" aria-label="Open Beat Detector page">v1.2.1</span></h1>
         </div>
 
         <div id="updateBanner"></div>
@@ -85,6 +85,56 @@
                     <option value="clip">Clip Markers (Source)</option>
                     <option value="sequence">Sequence Markers (Offset)</option>
                 </select>
+            </div>
+        </div>
+
+        <div class="settings-section compact" id="marker-colors-controls">
+            <div class="control-group marker-color-toggle">
+                <label for="marker-colors-enabled">Marker Colors</label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="marker-colors-enabled">
+                    Different colors by beat
+                </label>
+            </div>
+            <div class="control-group" id="single-marker-color-control">
+                <label for="marker-color-single">Color</label>
+                <select id="marker-color-single" class="marker-color-select">
+                    <option value="0">Green</option>
+                    <option value="1">Red</option>
+                    <option value="2">Purple</option>
+                    <option value="3">Orange</option>
+                    <option value="4">Yellow</option>
+                    <option value="5">White</option>
+                    <option value="6">Blue</option>
+                    <option value="7">Cyan</option>
+                </select>
+            </div>
+            <div id="marker-color-cycle-controls" style="display: none;">
+                <div class="marker-color-help" id="marker-color-help"></div>
+                <div class="control-group marker-color-slot" data-color-slot="0">
+                    <label for="marker-color-cycle-0">Beat 1</label>
+                    <select id="marker-color-cycle-0" class="marker-color-select">
+                        <option value="0">Green</option><option value="1">Red</option><option value="2">Purple</option><option value="3">Orange</option><option value="4">Yellow</option><option value="5">White</option><option value="6">Blue</option><option value="7">Cyan</option>
+                    </select>
+                </div>
+                <div class="control-group marker-color-slot" data-color-slot="1">
+                    <label for="marker-color-cycle-1">Beat 2</label>
+                    <select id="marker-color-cycle-1" class="marker-color-select">
+                        <option value="0">Green</option><option value="1" selected>Red</option><option value="2">Purple</option><option value="3">Orange</option><option value="4">Yellow</option><option value="5">White</option><option value="6">Blue</option><option value="7">Cyan</option>
+                    </select>
+                </div>
+                <div class="control-group marker-color-slot" data-color-slot="2">
+                    <label for="marker-color-cycle-2">Beat 3</label>
+                    <select id="marker-color-cycle-2" class="marker-color-select">
+                        <option value="0">Green</option><option value="1">Red</option><option value="2" selected>Purple</option><option value="3">Orange</option><option value="4">Yellow</option><option value="5">White</option><option value="6">Blue</option><option value="7">Cyan</option>
+                    </select>
+                </div>
+                <div class="control-group marker-color-slot" data-color-slot="3">
+                    <label for="marker-color-cycle-3">Beat 4</label>
+                    <select id="marker-color-cycle-3" class="marker-color-select">
+                        <option value="0">Green</option><option value="1">Red</option><option value="2">Purple</option><option value="3" selected>Orange</option><option value="4">Yellow</option><option value="5">White</option><option value="6">Blue</option><option value="7">Cyan</option>
+                    </select>
+                </div>
             </div>
         </div>
 

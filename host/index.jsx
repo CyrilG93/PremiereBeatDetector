@@ -1,6 +1,6 @@
 // ExtendScript for Beat Detector
 
-function BeatDetector_addMarkers(beatsJson, offsetSeconds, markerType) {
+function BeatDetector_addMarkers(beatsJson, offsetSeconds, markerType, markerColorsJson) {
     try {
         var beats = JSON.parse(beatsJson);
         var activeSequence = app.project.activeSequence;
@@ -13,6 +13,20 @@ function BeatDetector_addMarkers(beatsJson, offsetSeconds, markerType) {
         var failCount = 0;
         var errors = [];
         var offset = parseFloat(offsetSeconds) || 0;
+        var markerColorIndexes = [];
+
+        // Parse the panel's per-marker colors and safely fall back to Premiere Green for older calls.
+        try {
+            markerColorIndexes = markerColorsJson ? JSON.parse(markerColorsJson) : [];
+        } catch (colorParseError) {
+            markerColorIndexes = [];
+        }
+
+        function getMarkerColorIndex(markerIndex) {
+            // Restrict values to Premiere's documented Green-to-Cyan marker palette.
+            var colorIndex = parseInt(markerColorIndexes[markerIndex], 10);
+            return isNaN(colorIndex) || colorIndex < 0 || colorIndex > 7 ? 0 : colorIndex;
+        }
 
         // Get sequence timebase for frame-accurate markers
         var timebase = activeSequence.timebase;
@@ -59,7 +73,7 @@ function BeatDetector_addMarkers(beatsJson, offsetSeconds, markerType) {
                     var newMarker = markers.createMarker(frameAccurateTime);
                     newMarker.name = "Beat";
                     newMarker.comments = "Beat (frame " + frameNumber + ")";
-                    newMarker.setColorByIndex(0);
+                    newMarker.setColorByIndex(getMarkerColorIndex(i));
                     successCount++;
                 } catch (e) {
                     failCount++;
@@ -91,7 +105,7 @@ function BeatDetector_addMarkers(beatsJson, offsetSeconds, markerType) {
                     var newMarker = markers.createMarker(frameAccurateTime);
                     newMarker.name = "Beat";
                     newMarker.comments = "Beat (frame " + frameNumber + ")";
-                    newMarker.setColorByIndex(0);
+                    newMarker.setColorByIndex(getMarkerColorIndex(i));
                     successCount++;
                 } catch (e) {
                     failCount++;
