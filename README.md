@@ -198,6 +198,12 @@ This extension is provided as-is for use with Adobe Premiere Pro.
 
 ## Changelog
 
+### 1.2.4 — 2026-10-22
+
+- Markers can now use a configurable color pattern by beat, or a single chosen color.
+- Marker creation can be stopped while keeping the markers already placed.
+- Your marker color preferences are remembered across Premiere projects.
+
 ### 1.2.0 — 2026-10-15
 
 - The Manual Grid preview is now stable while adjusting BPM or the first beat: `/2` and `/4` always keep the selected first beat visible, with smoother marker updates.
