@@ -126,6 +126,7 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
      - **Clip Markers (Source)**: Markers on the source clip
      - **Sequence Markers (Offset)**: Markers on the timeline
    - Click "Create Markers" to add beat markers to Premiere Pro
+   - While markers are being created, click "Stop" to keep the markers already placed and cancel the remaining ones
 
 6. **Marker Colors**
    - Leave "Different colors by beat" off to use one selected Premiere marker color

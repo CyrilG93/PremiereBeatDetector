@@ -14,6 +14,8 @@ var manualPreviewFrame = null; // Coalesces rapid manual-slider input into one v
 var markerColorsEnabled = false; // Uses one configurable color until the user enables the repeating beat palette.
 var singleMarkerColorIndex = 0; // Green is Premiere's default marker color.
 var markerColorCycle = [0, 1, 2, 3]; // Defaults to Green, Red, Purple, and Orange for a four-beat cycle.
+var markerCreationJob = null; // Tracks the asynchronous Premiere marker job so the panel can stop between batches.
+var MARKER_CREATION_BATCH_SIZE = 25; // Keeps each ExtendScript call short enough for the Stop button to stay responsive.
 
 function toWaveSurferUrl(pathOrUrl) {
     // Keep already valid URLs untouched (http, https, file, blob, etc.).
@@ -217,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const GITHUB_REPO = 'CyrilG93/PremiereBeatDetector';
 const PRODUCT_PAGE_URL = 'https://www.cyrilplugin.com/beat-detector';
-let CURRENT_VERSION = '1.2.1';
+let CURRENT_VERSION = '1.2.2';
 
 // Open product and update links through CEP, with a browser fallback for local testing.
 function openExternalUrl(url) {
@@ -1399,13 +1401,105 @@ function getPeaks(buffer, threshold, minDistance) {
     return peaks;
 }
 
+function updateMarkerCreationButton(isCreating, isStopping) {
+    // Reflect the job state in the same action button without allowing duplicate create requests.
+    var button = document.getElementById('btn-create-markers');
+    button.textContent = isStopping ? 'Stopping...' : (isCreating ? 'Stop' : 'Create Markers');
+    button.disabled = isStopping;
+}
+
+function finishMarkerCreation(message) {
+    // Restore the panel after Premiere has completed, failed, or accepted a stop request.
+    markerCreationJob = null;
+    updateMarkerCreationButton(false, false);
+    document.getElementById('status-msg').textContent = message;
+}
+
+function requestMarkerCreationStop() {
+    // Stop after the active small batch returns so Premiere never leaves a partially executed script call.
+    if (!markerCreationJob || markerCreationJob.cancelRequested) {
+        return;
+    }
+
+    markerCreationJob.cancelRequested = true;
+    updateMarkerCreationButton(true, true);
+    document.getElementById('status-msg').textContent = 'Stopping marker creation...';
+}
+
+function cancelMarkerCreationInPremiere(job) {
+    // Release the host-side job state once its active batch has returned to the CEP panel.
+    csInterface.evalScript('BeatDetector_cancelMarkerCreation("' + job.id + '")', function () {
+        finishMarkerCreation('Stopped after creating ' + job.created + ' of ' + job.total + ' markers.');
+    });
+}
+
+function createNextMarkerBatch() {
+    // Process one short host batch, then yield to CEP so the user can press Stop before the next batch.
+    var job = markerCreationJob;
+    if (!job) {
+        return;
+    }
+    if (job.cancelRequested) {
+        cancelMarkerCreationInPremiere(job);
+        return;
+    }
+
+    var script = 'BeatDetector_addMarkerBatch("' + job.id + '", ' + MARKER_CREATION_BATCH_SIZE + ')';
+    csInterface.evalScript(script, function (result) {
+        // Ignore a late result from a job that was already replaced or finalized.
+        if (markerCreationJob !== job) {
+            return;
+        }
+
+        try {
+            var response = JSON.parse(result);
+            if (!response.success) {
+                finishMarkerCreation('Error: ' + response.error);
+                alert('Failed to create markers:\n\n' + response.error);
+                return;
+            }
+
+            job.created += response.count || 0;
+            job.failed += response.failed || 0;
+            if (job.cancelRequested) {
+                cancelMarkerCreationInPremiere(job);
+                return;
+            }
+            if (response.complete) {
+                var completionMessage = 'Created ' + job.created + ' markers!';
+                if (job.failed > 0) {
+                    completionMessage += ' (' + job.failed + ' failed.)';
+                }
+                finishMarkerCreation(completionMessage);
+                return;
+            }
+
+            document.getElementById('status-msg').textContent =
+                'Creating markers... ' + job.created + ' of ' + job.total;
+            setTimeout(createNextMarkerBatch, 0);
+        } catch (e) {
+            console.error('Marker batch parse error:', e);
+            finishMarkerCreation('Marker creation stopped: unexpected Premiere response.');
+            alert('Response parse error while creating markers:\n\n' + result);
+        }
+    });
+}
+
 function createMarkersInPremiere() {
+    // Turn the active action into Stop while a batch-based marker creation job is running.
+    if (markerCreationJob) {
+        requestMarkerCreationStop();
+        return;
+    }
+
     if (filteredBeats.length === 0) {
         alert("No beats detected! Please analyze audio first.");
         return;
     }
 
-    document.getElementById('status-msg').textContent = "Creating markers in Premiere...";
+    document.getElementById('status-msg').textContent = "Preparing marker creation in Premiere...";
+    document.getElementById('btn-create-markers').disabled = true;
+    document.getElementById('btn-create-markers').textContent = 'Preparing...';
 
     // Convert beats array to string for passing to ExtendScript
     var beatsJson = JSON.stringify(filteredBeats);
@@ -1429,33 +1523,35 @@ function createMarkersInPremiere() {
     // We need to escape quotes and pass it as a string literal
     var escapedJson = beatsJson.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
     var escapedMarkerColorsJson = markerColorsJson.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-    var script = 'BeatDetector_addMarkers("' + escapedJson + '", ' + offset + ', "' + markerType + '", "' + escapedMarkerColorsJson + '")';
+    var script = 'BeatDetector_beginMarkerCreation("' + escapedJson + '", "' + escapedMarkerColorsJson + '", ' + offset + ', "' + markerType + '")';
 
     console.log("ExtendScript call:", script.substring(0, 200));
 
     csInterface.evalScript(script, function (result) {
-        console.log("addMarkers result:", result);
+        console.log("beginMarkerCreation result:", result);
         try {
             var res = JSON.parse(result);
-            console.log("Parsed result:", res);
-
             if (res.success) {
-                var msg = "Created " + res.count + " markers!";
-                document.getElementById('status-msg').textContent = msg;
-
-                if (res.count === 0) {
-                    alert("WARNING: 0 markers created!\n\n" + debugInfo);
-                } else if (res.failed && res.failed > 0) {
-                    alert("Created " + res.count + " markers, but " + res.failed + " failed.");
-                }
+                markerCreationJob = {
+                    id: res.jobId,
+                    total: res.total,
+                    created: 0,
+                    failed: 0,
+                    cancelRequested: false
+                };
+                updateMarkerCreationButton(true, false);
+                createNextMarkerBatch();
             } else if (res.error) {
-                document.getElementById('status-msg').textContent = "Error: " + res.error;
+                finishMarkerCreation("Error: " + res.error);
                 alert("Failed to create markers:\n\n" + res.error + "\n\n" + debugInfo);
+            } else {
+                finishMarkerCreation("Marker creation could not start");
+                alert("Premiere returned an unexpected response while preparing markers.");
             }
         } catch (e) {
             console.error("Parse error:", e);
             alert("Response parse error!\n\nRaw response: " + result + "\n\nError: " + e.toString());
-            document.getElementById('status-msg').textContent = "Markers created (response parse error)";
+            finishMarkerCreation("Marker creation could not start");
         }
     });
 }

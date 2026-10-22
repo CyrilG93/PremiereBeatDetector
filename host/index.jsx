@@ -1,5 +1,125 @@
 // ExtendScript for Beat Detector
 
+var BeatDetector_markerCreationJobs = {}; // Holds short-lived marker jobs while the CEP panel schedules batches.
+
+function BeatDetector_getMarkerColorIndex(markerColorIndexes, markerIndex) {
+    // Restrict every requested color to Premiere's documented Green-to-Cyan marker palette.
+    var colorIndex = parseInt(markerColorIndexes[markerIndex], 10);
+    return isNaN(colorIndex) || colorIndex < 0 || colorIndex > 7 ? 0 : colorIndex;
+}
+
+function BeatDetector_beginMarkerCreation(beatsJson, markerColorsJson, offsetSeconds, markerType) {
+    // Capture the target marker collection once, so following batches use the same clip or sequence.
+    try {
+        var beats = JSON.parse(beatsJson);
+        var markerColorIndexes = markerColorsJson ? JSON.parse(markerColorsJson) : [];
+        var activeSequence = app.project.activeSequence;
+        if (!activeSequence) {
+            return JSON.stringify({ error: "No active sequence found." });
+        }
+
+        var markers;
+        if (markerType === "clip") {
+            var selection = activeSequence.getSelection();
+            if (!selection || selection.length === 0 || !selection[0].projectItem) {
+                return JSON.stringify({ error: "No clip selected for clip markers." });
+            }
+            if (typeof selection[0].projectItem.getMarkers !== 'function') {
+                return JSON.stringify({ error: "Clip markers not supported in this Premiere Pro version. Use 'Sequence Markers' instead." });
+            }
+            markers = selection[0].projectItem.getMarkers();
+        } else {
+            markers = activeSequence.markers;
+        }
+        if (!markers) {
+            return JSON.stringify({ error: "Could not get markers object from Premiere." });
+        }
+
+        var fps = parseFloat(activeSequence.timebase);
+        if (isNaN(fps) || fps <= 0) {
+            fps = 25;
+        }
+        var jobId = 'beatDetector_' + new Date().getTime() + '_' + Math.floor(Math.random() * 1000000);
+        BeatDetector_markerCreationJobs[jobId] = {
+            beats: beats,
+            markerColorIndexes: markerColorIndexes,
+            markers: markers,
+            offset: parseFloat(offsetSeconds) || 0,
+            markerType: markerType,
+            fps: fps,
+            nextIndex: 0
+        };
+        return JSON.stringify({ success: true, jobId: jobId, total: beats.length });
+    } catch (error) {
+        return JSON.stringify({ error: "Exception: " + error.toString() });
+    }
+}
+
+function BeatDetector_addMarkerBatch(jobId, requestedBatchSize) {
+    // Add a bounded number of markers, then return control to CEP so it can react to Stop.
+    try {
+        var job = BeatDetector_markerCreationJobs[jobId];
+        if (!job) {
+            return JSON.stringify({ error: "Marker creation job is no longer available." });
+        }
+
+        var batchSize = parseInt(requestedBatchSize, 10);
+        if (isNaN(batchSize) || batchSize < 1) {
+            batchSize = 1;
+        }
+        batchSize = Math.min(batchSize, 100);
+
+        var endIndex = Math.min(job.nextIndex + batchSize, job.beats.length);
+        var successCount = 0;
+        var failCount = 0;
+        var errors = [];
+        for (var i = job.nextIndex; i < endIndex; i++) {
+            var timeInSeconds = parseFloat(job.beats[i]);
+            if (isNaN(timeInSeconds)) {
+                failCount++;
+                continue;
+            }
+
+            try {
+                var markerTime = job.markerType === "sequence" ? timeInSeconds + job.offset : timeInSeconds;
+                var frameNumber = Math.round(markerTime * job.fps);
+                var frameAccurateTime = frameNumber / job.fps;
+                var newMarker = job.markers.createMarker(frameAccurateTime);
+                newMarker.name = "Beat";
+                newMarker.comments = "Beat (frame " + frameNumber + ")";
+                newMarker.setColorByIndex(BeatDetector_getMarkerColorIndex(job.markerColorIndexes, i));
+                successCount++;
+            } catch (e) {
+                failCount++;
+                if (errors.length < 3) {
+                    errors.push("Beat " + i + ": " + e.toString());
+                }
+            }
+        }
+
+        job.nextIndex = endIndex;
+        var complete = job.nextIndex >= job.beats.length;
+        if (complete) {
+            delete BeatDetector_markerCreationJobs[jobId];
+        }
+        return JSON.stringify({
+            success: true,
+            count: successCount,
+            failed: failCount,
+            complete: complete,
+            errors: errors
+        });
+    } catch (error) {
+        return JSON.stringify({ error: "Exception: " + error.toString() });
+    }
+}
+
+function BeatDetector_cancelMarkerCreation(jobId) {
+    // Forget the pending job without touching markers that were already created in earlier batches.
+    delete BeatDetector_markerCreationJobs[jobId];
+    return JSON.stringify({ success: true });
+}
+
 function BeatDetector_addMarkers(beatsJson, offsetSeconds, markerType, markerColorsJson) {
     try {
         var beats = JSON.parse(beatsJson);
