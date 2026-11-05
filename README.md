@@ -192,13 +192,13 @@ C:\Users\[YourUsername]\AppData\Roaming\Adobe\CEP\extensions\com.antigravity.bea
 
 This extension is provided as-is for use with Adobe Premiere Pro.
 
-**Version**: 1.2.4
+**Version**: 1.3.0
 
 ---
 
 ## Changelog
 
-### 1.2.4 — 2026-10-22
+### 1.3.0 — 2026-11-05
 
 - Markers can now use a configurable color pattern by beat, or a single chosen color.
 - Marker creation can be stopped while keeping the markers already placed.
